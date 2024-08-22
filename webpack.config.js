@@ -17,7 +17,8 @@ module.exports = {
 			patterns: [
 				{ from: 'about.html', to: 'about.html' },
 				{ from: 'stats.html', to: 'stats.html' },
-				{ from: 'worker.js', to: 'worker.js' }
+				{ from: 'worker.js', to: 'worker.js' },
+				{ from: 'feed.html', to: 'feed.html' },
 			]
 		}),
 		new HtmlWebpackPlugin({
