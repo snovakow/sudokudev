@@ -1,4 +1,4 @@
-import { Grid, GridCell, Marker } from "./Grid.js";
+import { Grid, GridCell, Marker } from "../sudokulib/Grid.js";
 
 let reduce_i = 0;
 const REDUCE = {

@@ -1,6 +1,6 @@
-import { CellMarker, Grid } from "./Grid.js";
+import { CellMarker, Grid } from "../sudokulib/Grid.js";
 import { sudokuGenerator, fillSolve, totalPuzzles } from "./generator.js";
-import { REDUCE } from "./solver.js";
+import { REDUCE } from "../sudokulib/solver.js";
 
 const cells = new Grid();
 for (const index of Grid.indices) cells[index] = new CellMarker(index);

@@ -1,8 +1,8 @@
 import { FONT, board } from "./board.js";
 import { consoleOut, fillSolve } from "./generator.js";
-import { CellMarker, Grid } from "./Grid.js";
-import { picker, pickerDraw, pickerMarker, pixAlign } from "./picker.js";
-import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "./solver.js";
+import { CellMarker, Grid } from "../sudokulib/Grid.js";
+import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
+import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "../sudokulib/solver.js";
 
 const raws = [
 	"Unsolvable 606",
