@@ -16,7 +16,7 @@ module.exports = {
 		new CopyPlugin({
 			patterns: [
 				{ from: 'about.html', to: 'about.html' },
-				{ from: 'stats.html', to: 'stats.html' },
+				{ from: 'generate.html', to: 'generate.html' },
 				{ from: 'worker.js', to: 'worker.js' },
 				{ from: 'feed.html', to: 'feed.html' },
 			]
