@@ -18,7 +18,7 @@ module.exports = {
 				{ from: 'about.html', to: 'about.html' },
 				{ from: 'generate.html', to: 'generate.html' },
 				{ from: 'worker.js', to: 'worker.js' },
-				{ from: 'feed.html', to: 'feed.html' },
+				{ from: 'stats.html', to: 'stats.html' },
 			]
 		}),
 		new HtmlWebpackPlugin({
