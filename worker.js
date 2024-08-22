@@ -1,5 +1,5 @@
 import { CellMarker, Grid } from "../sudokulib/Grid.js";
-import { sudokuGenerator, fillSolve, totalPuzzles } from "./generator.js";
+import { sudokuGenerator, fillSolve, totalPuzzles } from "../sudokulib/generator.js";
 import { REDUCE } from "../sudokulib/solver.js";
 
 const cells = new Grid();
