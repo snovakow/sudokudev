@@ -1,5 +1,5 @@
 import { FONT, board } from "./board.js";
-import { consoleOut, fillSolve } from "./generator.js";
+import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { CellMarker, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "../sudokulib/solver.js";
