@@ -37,7 +37,7 @@
 				container.innerHTML = content + append;
 			};
 			xhttp.onreadystatechange = () => {
-				// if (xhttp.readyState == 3) fillContent(xhttp.responseText, '... ' + diffTime());
+				if (xhttp.readyState == 3) fillContent(xhttp.responseText, '... ' + diffTime());
 				if (xhttp.readyState == 4 && xhttp.status == 200) {
 					const options = {
 						weekday: "long",
@@ -50,15 +50,10 @@
 					};
 					const time = diffTime() + " " + new Date().toLocaleString(undefined, options);
 					fillContent(xhttp.responseText, time);
-
-					const minute = 1000 * 60;
-					window.setTimeout(() => {
-						refresh();
-					}, minute * 60);
+					// window.setTimeout(() => { refresh(); }, 1000 * 60 * 60);
 				}
 			};
-			let url = "https://snovakow.dev/sudokulib/feed.php";
-			if (window.location.search === "?dbphistomefel") url += "?dbphistomefel";
+			let url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
 			xhttp.open("GET", url, true);
 			xhttp.send();
 		};
