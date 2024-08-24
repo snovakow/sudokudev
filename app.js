@@ -1,4 +1,4 @@
-import { FONT, board } from "./board.js";
+import { FONT, board } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { CellMarker, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
