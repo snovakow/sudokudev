@@ -374,6 +374,6 @@ const step = (search) => {
 onmessage = (e) => {
 	const search = e.data.search;
 	puzzleString = e.data.grid ?? null;
-	stepMode = (search === "?dbphistomefel") ? 2 : 0;
+	stepMode = (search === "?dbphistomefel" || search === "?phistomefel") ? 2 : 0;
 	while (running) step(search);
 };
