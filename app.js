@@ -1,4 +1,4 @@
-import { FONT, board } from "../sudokulib/board.js";
+import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { CellMarker, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
@@ -386,7 +386,6 @@ const selector = createSelect(["-", ...names], (select) => {
 			cell.setSymbol(0);
 			board.startCells[i].symbol = 0;
 		}
-		localStorage.removeItem("gridName");
 		saveGrid();
 		draw();
 		return;
@@ -402,33 +401,9 @@ const selector = createSelect(["-", ...names], (select) => {
 selector.style.position = 'absolute';
 selector.style.width = '40px';
 
-const DataVersion = "0.2";
 
-const saveGrid = (selectedIndex = null) => {
-	if (selectedIndex !== null) localStorage.setItem("gridName", selectedIndex);
-	localStorage.setItem("DataVersion", DataVersion);
-	localStorage.setItem("startGrid", board.startCells.toStorage());
-	localStorage.setItem("grid", board.cells.toStorage());
-};
-const loadGrid = () => {
-	if (localStorage.getItem("DataVersion") !== DataVersion) return false;
 
-	const selectedIndex = localStorage.getItem("gridName");
-	if (selectedIndex !== null) {
-		const selectedInt = parseInt(selectedIndex);
-		if (selectedInt > 0 && selectedInt < selector.options.length) selector.selectedIndex = selectedInt;
-	}
 
-	const startGrid = localStorage.getItem("startGrid");
-	if (!startGrid) return false;
-
-	board.startCells.fromStorage(startGrid);
-
-	const grid = localStorage.getItem("grid");
-	if (grid) {
-		board.cells.fromStorage(grid);
-	}
-};
 
 loadGrid();
 
