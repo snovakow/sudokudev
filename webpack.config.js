@@ -1,4 +1,3 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 const path = require('path');
 
@@ -6,7 +5,7 @@ module.exports = {
 	mode: "production",
 	entry: './main.js',
 	output: {
-		filename: '[chunkhash].js',
+		filename: 'main.js',
 		path: path.resolve(__dirname, '../../live/sudokudev'),
 		chunkFilename: '[chunkhash].js',
 		clean: true,
@@ -15,14 +14,9 @@ module.exports = {
 	plugins: [
 		new CopyPlugin({
 			patterns: [
+				{ from: 'index.html', to: 'index.html' },
 				{ from: 'about.html', to: 'about.html' },
-				{ from: 'generate.html', to: 'generate.html' },
-				{ from: 'worker.js', to: 'worker.js' },
-				{ from: 'stats.html', to: 'stats.html' },
 			]
-		}),
-		new HtmlWebpackPlugin({
-			title: ""
 		})
-	],
+	]
 };
