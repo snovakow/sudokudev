@@ -1,9 +1,9 @@
-import { CellMarker, Grid } from "../sudokulib/Grid.js";
+import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { sudokuGenerator, fillSolve, totalPuzzles } from "../sudokulib/generator.js";
 import { REDUCE } from "../sudokulib/solver.js";
 
 const cells = new Grid();
-for (const index of Grid.indices) cells[index] = new CellMarker(index);
+for (const index of Grid.indices) cells[index] = new CellCandidate(index);
 
 let set4_2_2 = 0;
 
@@ -41,7 +41,7 @@ let setHidden4 = 0;
 
 let simples = 0;
 
-let markers = 0;
+let candidates = 0;
 
 let yWingReduced = 0;
 let xyzWingReduced = 0;
@@ -239,7 +239,7 @@ const step = (search) => {
 			data.superpositions++;
 		}
 
-		if (!result.bruteForceFill) markers++;
+		if (!result.bruteForceFill) candidates++;
 	}
 
 	setsTotal += setNaked2;
@@ -254,15 +254,15 @@ const step = (search) => {
 		return Math.ceil(100 * res * val / total) / res + "%";
 	}
 
-	let markerTotal = 0;
-	markerTotal += setsTotal;
-	markerTotal += yWingReduced;
-	markerTotal += xyzWingReduced;
-	markerTotal += xWingReduced;
-	markerTotal += swordfishReduced;
-	markerTotal += jellyfishReduced;
-	markerTotal += uniqueRectangleReduced;
-	markerTotal += phistomefelCount;
+	let candidateTotal = 0;
+	candidateTotal += setsTotal;
+	candidateTotal += yWingReduced;
+	candidateTotal += xyzWingReduced;
+	candidateTotal += xWingReduced;
+	candidateTotal += swordfishReduced;
+	candidateTotal += jellyfishReduced;
+	candidateTotal += uniqueRectangleReduced;
+	candidateTotal += phistomefelCount;
 
 	let superTotal = 0;
 	for (const value of superpositionReduced.values()) {
@@ -343,16 +343,16 @@ const step = (search) => {
 		printLine("Hidden 3", setHidden3, setsTotal);
 		printLine("Hidden 4", setHidden4, setsTotal);
 	}
-	if (markerTotal > 0) {
-		lines.push("--- Markers");
-		printLine("NakedHiddenSet", setsTotal, markerTotal);
-		printLine("yWing", yWingReduced, markerTotal);
-		printLine("xyzWing", xyzWingReduced, markerTotal);
-		printLine("xWing", xWingReduced, markerTotal);
-		printLine("Swordfish", swordfishReduced, markerTotal);
-		printLine("Jellyfish", jellyfishReduced, markerTotal);
-		printLine("UniqueRectangle", uniqueRectangleReduced, markerTotal);
-		printLine("Phistomefel", phistomefelCount, markerTotal);
+	if (candidateTotal > 0) {
+		lines.push("--- Candidates");
+		printLine("NakedHiddenSet", setsTotal, candidateTotal);
+		printLine("yWing", yWingReduced, candidateTotal);
+		printLine("xyzWing", xyzWingReduced, candidateTotal);
+		printLine("xWing", xWingReduced, candidateTotal);
+		printLine("Swordfish", swordfishReduced, candidateTotal);
+		printLine("Jellyfish", jellyfishReduced, candidateTotal);
+		printLine("UniqueRectangle", uniqueRectangleReduced, candidateTotal);
+		printLine("Phistomefel", phistomefelCount, candidateTotal);
 	}
 
 	lines.push("--- Stats");
@@ -361,7 +361,7 @@ const step = (search) => {
 
 	lines.push("--- Totals");
 	lines.push("Simples: " + percent(simples) + " - " + simples);
-	lines.push("Markers: " + percent(markers) + " - " + markers);
+	lines.push("Candidates: " + percent(candidates) + " - " + candidates);
 	lines.push("Superpositions: " + percent(superpositions) + " - " + superpositions);
 	lines.push("BruteForceFill: " + percent(bruteForceFill) + " - " + bruteForceFill);
 	lines.push("TotalPuzzles: " + totalPuzzles);
