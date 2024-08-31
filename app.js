@@ -2,7 +2,7 @@ import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
 import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
-import { bentWings, candidates, hiddenSingles, jellyfish, loneSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "../sudokulib/solver.js";
+import { bentWings, candidates, hiddenSingles, jellyfish, nakedSingles, NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing } from "../sudokulib/solver.js";
 
 const raws = [
 	"Unsolvable 606",
@@ -271,20 +271,16 @@ const raws = [
 	[1, 2, 0, 0, 5, 0, 0, 8, 9, 6, 8, 0, 9, 0, 0, 0, 3, 5, 0, 0, 9, 0, 8, 0, 2, 4, 0, 0, 6, 0, 0, 0, 5, 0, 0, 0, 0, 0, 8, 0, 0, 9, 0, 0, 0, 0, 0, 1, 6, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 9, 0, 0, 8, 1, 0, 0, 0, 0, 0, 5, 3, 9, 3, 0, 0, 0, 0, 0, 1, 2],
 	"Phist Rand 2YWing Deadly N322 H2",
 	'100056080500000000064109300200000890000000000038001200402000010000070908050000060'.split(''),
-	"2",
-	'023006009040000000900000140700010403000302590000000060580630000000984300000200900'.split(''),
-	"1 N2",
-	'000400009000078001800000600009080000682003000005000940098000103001000070070030200'.split(''),
-	"N2",
-	'003400000000020100800000350001000000079001600000000530002000004000500000010069070'.split(''),
-	"2",
-	'000006080050710000004000050360040075009000030000072000501009300000000902600000000'.split(''),
-	"1 N2",
-	'020000089570030200000020500900600004000102800000070090000000050000508037609000000'.split(''),
-	"N2",
-	'000400000970200000805017000080000003000060105402000090006000947000030610000000000'.split(''),
 	"1",
-	'020000000000000050700013000045000007900705000000600002000000000539800060670020804'.split(''),
+	'100050009800300000000000306009000000060010420008004090000040000007060008000508270'.split(''),
+	"2",
+	'003000080070001006000920000040890500000100970201000000000000002536000800000079600'.split(''),
+	"3",
+	'100000009095008000007200000000000200000600000370040800001004020500900034006000005'.split(''),
+	"4",
+	'020000009070001000409000000600040052000030060000060491300570000002300015500600070'.split(''),
+	"5",
+	'000400709960000001000030400010000003200560000000000090002005000301904020050070008'.split(''),
 ];
 const sudokuSamples = [];
 for (let rawIndex = 0; rawIndex < raws.length; rawIndex += 2) {
@@ -545,7 +541,7 @@ const superimposeCandidates = (reset = false) => {
 		do {
 			candidates(cells);
 
-			progress = loneSingles(cells);
+			progress = nakedSingles(cells);
 			if (progress) continue;
 
 			progress = hiddenSingles(cells);
