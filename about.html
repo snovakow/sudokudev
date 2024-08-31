@@ -16,18 +16,6 @@
 			background-color: white;
 		}
 	</style>
-	<script type="module">
-		const appInitialize = (title, version, css) => {
-			document.title = title;
-
-			if (css) {
-				const link = document.createElement('link');
-				link.rel = "stylesheet";
-				link.href = css + "?" + version;
-				document.head.appendChild(link);
-			}
-		}
-	</script>
 </head>
 
 <body>
