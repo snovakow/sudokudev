@@ -547,14 +547,14 @@ const superimposeCandidates = (reset = false) => {
 			progress = hiddenSingles(cells);
 			if (progress) continue;
 
-			progress = omissions(cells);
-			if (progress) continue;
-
 			// const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
 			// if (nakedHiddenResult) {
 			// 	progress = true;
 			// 	continue;
 			// }
+
+			// progress = omissions(cells);
+			// if (progress) continue;
 
 			// const bentWingResults = bentWings(cells);
 			// if (bentWingResults.length > 0) {
