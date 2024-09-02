@@ -57,9 +57,7 @@ let superpositionReduced = new Map();
 let bruteForceFill = 0;
 
 let maxTime = 0;
-
 let totalTime = 0;
-let totalOps = 0;
 
 let puzzleString = null;
 
@@ -76,7 +74,7 @@ const step = (search) => {
 		cells.fromString(puzzleString);
 		mode = -1;
 	}
-	const { clueCount, operations } = sudokuGenerator(cells, mode);
+	const clueCount = sudokuGenerator(cells, mode);
 
 	const clueValue = clueCounter.get(clueCount);
 	if (clueValue) {
@@ -125,7 +123,6 @@ const step = (search) => {
 	}
 
 	totalTime += elapsed;
-	totalOps += operations;
 
 	let setsTotal = 0;
 
@@ -355,16 +352,13 @@ const step = (search) => {
 		printLine("Phistomefel", phistomefelCount, candidateTotal);
 	}
 
-	lines.push("--- Stats");
-	lines.push("Time Avg: " + totalTime / 1000 / totalPuzzles + " Max: " + maxTime / 1000);
-	lines.push("Operations Avg: " + Math.round(totalOps / totalPuzzles));
-
 	lines.push("--- Totals");
 	lines.push("Simples: " + percent(simples) + " - " + simples);
 	lines.push("Candidates: " + percent(candidates) + " - " + candidates);
 	lines.push("Superpositions: " + percent(superpositions) + " - " + superpositions);
 	lines.push("BruteForceFill: " + percent(bruteForceFill) + " - " + bruteForceFill);
-	lines.push("TotalPuzzles: " + totalPuzzles);
+	lines.push("Time Avg: " + totalTime / 1000 / totalPuzzles + " Max: " + maxTime / 1000);
+	lines.push("Puzzles: " + totalPuzzles);
 
 	data.message = lines;
 
