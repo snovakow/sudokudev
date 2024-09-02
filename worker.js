@@ -355,7 +355,7 @@ const step = (search) => {
 	lines.push("--- Totals");
 	lines.push("Simples: " + percent(simples) + " - " + simples);
 	lines.push("Candidates: " + percent(candidates) + " - " + candidates);
-	lines.push("Superpositions: " + percent(superpositions) + " - " + superpositions);
+	// lines.push("Superpositions: " + percent(superpositions) + " - " + superpositions);
 	lines.push("BruteForceFill: " + percent(bruteForceFill) + " - " + bruteForceFill);
 	lines.push("Time Avg: " + totalTime / 1000 / totalPuzzles + " Max: " + maxTime / 1000);
 	lines.push("Puzzles: " + totalPuzzles);
