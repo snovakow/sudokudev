@@ -358,7 +358,7 @@ const step = (search) => {
 		printLine("Swordfish", swordfishReduced, candidateTotal);
 		printLine("Jellyfish", jellyfishReduced, candidateTotal);
 		printLine("UniqueRectangle", uniqueRectangleReduced, candidateTotal);
-		printLine("Phistomefel", phistomefelCount, candidateTotal);
+		if (mode === 2) printLine("Phistomefel", phistomefelCount, candidateTotal);
 	}
 
 	lines.push("--- Totals");
