@@ -43,6 +43,7 @@ let simples = 0;
 
 let candidates = 0;
 
+let omissionsReduced = 0;
 let yWingReduced = 0;
 let xyzWingReduced = 0;
 let xWingReduced = 0;
@@ -103,6 +104,7 @@ const step = (search) => {
 	data.hidden2 = 0;
 	data.hidden3 = 0;
 	data.hidden4 = 0;
+	data.omissions = 0;
 	data.yWing = 0;
 	data.xyzWing = 0;
 	data.xWing = 0;
@@ -135,6 +137,7 @@ const step = (search) => {
 
 	let simple = true;
 	simple &&= result.nakedHiddenSetsReduced.length === 0;
+	simple &&= result.omissionsReduced === 0;
 	simple &&= result.bentWingsReduced.length === 0;
 	simple &&= result.xWingReduced === 0;
 	simple &&= result.swordfishReduced === 0;
@@ -192,6 +195,10 @@ const step = (search) => {
 				else if (set.hiddenSize === 4) data.hidden4++;
 			}
 		}
+
+		omissionsReduced += result.omissionsReduced;
+		data.omissions += result.omissionsReduced;
+
 		if (result.bentWingsReduced.length > 0) {
 			for (const reduced of result.bentWingsReduced) {
 				if (reduced.strategy === REDUCE.Y_Wing) yWingReduced++;
@@ -253,6 +260,7 @@ const step = (search) => {
 
 	let candidateTotal = 0;
 	candidateTotal += setsTotal;
+	candidateTotal += omissionsReduced;
 	candidateTotal += yWingReduced;
 	candidateTotal += xyzWingReduced;
 	candidateTotal += xWingReduced;
@@ -343,6 +351,7 @@ const step = (search) => {
 	if (candidateTotal > 0) {
 		lines.push("--- Candidates");
 		printLine("NakedHiddenSet", setsTotal, candidateTotal);
+		printLine("Omissions", omissionsReduced, candidateTotal);
 		printLine("yWing", yWingReduced, candidateTotal);
 		printLine("xyzWing", xyzWingReduced, candidateTotal);
 		printLine("xWing", xWingReduced, candidateTotal);
