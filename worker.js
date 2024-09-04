@@ -61,13 +61,15 @@ let maxTime = 0;
 let totalTime = 0;
 
 let puzzleString = null;
+let puzzleStrings = null;
 
 const clueCounter = new Map();
 
-let running = true;
+let running = false;
+let search = "";
 
 let stepMode = 0; // 1=row 2=phist
-const step = (search) => {
+const step = () => {
 	let time = performance.now();
 
 	let mode = stepMode;
