@@ -77,6 +77,16 @@ const step = () => {
 		cells.fromString(puzzleString);
 		mode = -1;
 	}
+	if (puzzleStrings) {
+		const puzzle = puzzleStrings.shift();
+		if (puzzle) {
+			cells.fromString(puzzle);
+			mode = -1;
+		} else {
+			running = false;
+			return;
+		}
+	}
 	const clueCount = sudokuGenerator(cells, mode);
 
 	const clueValue = clueCounter.get(clueCount);
