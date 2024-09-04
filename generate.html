@@ -26,7 +26,7 @@
 		updateButton.style.height = '32px';
 
 		let worker = null;
-		const process = (grids) => {
+		const processGenerate = (grids) => {
 			if (worker) {
 				worker.terminate();
 				worker = null;
