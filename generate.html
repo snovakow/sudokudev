@@ -18,70 +18,150 @@
 		generateButton.style.position = 'absolute';
 		generateButton.style.height = '32px';
 
+		const updateButton = document.createElement('button');
+		updateButton.appendChild(document.createTextNode("Update"));
+		updateButton.style.top = '48px';
+		updateButton.style.right = '8px';
+		updateButton.style.position = 'absolute';
+		updateButton.style.height = '32px';
+
 		let worker = null;
-		const process = () => {
+		const process = (grids) => {
 			if (worker) {
 				worker.terminate();
 				worker = null;
-			} else {
-				const setMessage = (message) => {
-					while (body.firstChild) body.removeChild(body.lastChild);
-					for (const line of message) {
-						const stat = document.createElement('div');
-						stat.appendChild(document.createTextNode(line));
-						body.appendChild(stat);
+				return;
+			}
+
+			const setMessage = (message) => {
+				while (body.firstChild) body.removeChild(body.lastChild);
+				for (const line of message) {
+					const stat = document.createElement('div');
+					stat.appendChild(document.createTextNode(line));
+					body.appendChild(stat);
+				}
+			};
+
+			const sendData = (data, dbphistomefel = false) => {
+				let url = 'https://snovakow.dev/sudokulib/import.php?version=1';
+				url += '&puzzleClues=' + data.puzzleClues;
+				url += '&puzzleFilled=' + data.puzzleFilled;
+				url += '&clueCount=' + data.clueCount;
+				url += '&simple=' + data.simple;
+				url += '&naked2=' + data.naked2;
+				url += '&naked3=' + data.naked3;
+				url += '&naked4=' + data.naked4;
+				url += '&hidden2=' + data.hidden2;
+				url += '&hidden3=' + data.hidden3;
+				url += '&hidden4=' + data.hidden4;
+				url += '&yWing=' + data.yWing;
+				url += '&xyzWing=' + data.xyzWing;
+				url += '&xWing=' + data.xWing;
+				url += '&swordfish=' + data.swordfish;
+				url += '&jellyfish=' + data.jellyfish;
+				url += '&uniqueRectangle=' + data.uniqueRectangle;
+				url += '&phistomefel=' + data.phistomefel;
+				url += '&superpositions=' + data.superpositions;
+				url += '&bruteForce=' + data.bruteForce;
+				if (dbphistomefel) url += '&dbphistomefel';
+				console.log(data);
+
+				fetch(url, {
+					method: "GET" // default, so we can ignore
+				});
+			};
+
+			const workerData = { search: window.location.search };
+			const prop = "?grid=";
+			if (window.location.search.startsWith(prop) && window.location.search.length === prop.length + 81) {
+				workerData.grid = window.location.search.substring(prop.length);
+			}
+			workerData.grids = grids;
+
+			worker = new Worker("worker.js", { type: "module" });
+			worker.postMessage(workerData);
+			worker.onmessage = (e) => {
+				const data = e.data;
+				if (data.message) setMessage(data.message);
+				if (window.location.search === "?db") sendData(data);
+				if (window.location.search === "?dbphistomefel") sendData(data, true);
+			};
+		};
+
+		const refresh = () => {
+			const startTime = performance.now();
+			const diffTime = (fixed = 1) => {
+				const diff = performance.now() - startTime;
+				const res = Math.pow(10, fixed);
+				const elapsed = Math.round(diff * res / 1000) / res;
+				return elapsed.toFixed(fixed) + "s";
+			};
+
+			let timer = window.setInterval(() => {
+				console.log(diffTime());
+				// container.innerHTML = diffTime();
+			}, 1000 / 1);
+			const fillContent = (content, append) => {
+				if (timer) {
+					window.clearInterval(timer);
+					timer = 0;
+				}
+				// console.log(append);
+				// console.log(content);
+			};
+			const inc = 10000;
+			const end = 10000000;
+			let start = 0;
+			const sendRequest = () => {
+				const xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = () => {
+					// if (xhttp.readyState == 3) fillContent(xhttp.responseText, '... ' + diffTime());
+					if (xhttp.readyState == 4 && xhttp.status == 200) {
+						const options = {
+							weekday: "long",
+							year: "numeric",
+							month: "long",
+							day: "numeric",
+							hour: "numeric",
+							minute: "numeric",
+							second: "numeric",
+						};
+						const time = diffTime() + " " + new Date().toLocaleString(undefined, options);
+						const json = JSON.parse(xhttp.responseText);
+						fillContent(json.length, time);
+						// window.setTimeout(() => { refresh(); }, 1000 * 60 * 60);
+						start += inc;
+
+						if (start < end) sendRequest();
+
+						if (worker) {
+							const workerData = { search: window.location.search };
+							workerData.grids = json;
+							worker.postMessage(workerData);
+						} else {
+							process(json);
+						}
 					}
 				};
-
-				const sendData = (data, dbphistomefel = false) => {
-					let url = 'https://snovakow.dev/sudokulib/import.php?version=1';
-					url += '&puzzleClues=' + data.puzzleClues;
-					url += '&puzzleFilled=' + data.puzzleFilled;
-					url += '&clueCount=' + data.clueCount;
-					url += '&simple=' + data.simple;
-					url += '&naked2=' + data.naked2;
-					url += '&naked3=' + data.naked3;
-					url += '&naked4=' + data.naked4;
-					url += '&hidden2=' + data.hidden2;
-					url += '&hidden3=' + data.hidden3;
-					url += '&hidden4=' + data.hidden4;
-					url += '&yWing=' + data.yWing;
-					url += '&xyzWing=' + data.xyzWing;
-					url += '&xWing=' + data.xWing;
-					url += '&swordfish=' + data.swordfish;
-					url += '&jellyfish=' + data.jellyfish;
-					url += '&uniqueRectangle=' + data.uniqueRectangle;
-					url += '&phistomefel=' + data.phistomefel;
-					url += '&superpositions=' + data.superpositions;
-					url += '&bruteForce=' + data.bruteForce;
-					if (dbphistomefel) url += '&dbphistomefel';
-
-					fetch(url, {
-						method: "GET" // default, so we can ignore
-					});
-				};
-
-				const workerData = { search: window.location.search };
-				const prop = "?grid=";
-				if (window.location.search.startsWith(prop) && window.location.search.length === prop.length + 81) {
-					workerData.grid = window.location.search.substring(prop.length);
-				}
-
-				worker = new Worker("worker.js", { type: "module" });
-				worker.postMessage(workerData);
-				worker.onmessage = (e) => {
-					const data = e.data;
-					if (data.message) setMessage(data.message);
-					if (window.location.search === "?db") sendData(data);
-					if (window.location.search === "?dbphistomefel") sendData(data, true);
-				};
+				const url = `https://snovakow.dev/sudokulib/feedSudoku.php?start=${start}&end=${start + inc}`;
+				// console.log(url);
+				xhttp.open("GET", url, true);
+				xhttp.send();
 			}
+			sendRequest();
 		};
+		// refresh();
 
 		generateButton.addEventListener('click', () => {
 			process();
 		});
+
+		updateButton.addEventListener('click', () => {
+			refresh();
+		});
+
 		document.body.appendChild(generateButton);
+		document.body.appendChild(updateButton);
 
 		document.body.appendChild(body);
 	</script>
