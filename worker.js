@@ -79,14 +79,12 @@ const step = () => {
 	let id = 0;
 	if (puzzleStrings) {
 		const puzzleData = puzzleStrings.shift();
-		id = puzzleData.id;
+		if (!puzzleData) return false;
 		const puzzle = puzzleData.puzzleClues;
-		if (puzzle) {
-			cells.fromString(puzzle);
-			mode = -1;
-		} else {
-			return false;
-		}
+		if (!puzzle) return false;
+		id = puzzleData.id;
+		cells.fromString(puzzle);
+		mode = -1;
 	}
 	const clueCount = sudokuGenerator(cells, mode);
 
