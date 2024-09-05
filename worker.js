@@ -65,9 +65,7 @@ let puzzleStrings = null;
 
 const clueCounter = new Map();
 
-let running = false;
 let search = "";
-
 let stepMode = 0; // 1=row 2=phist
 const step = () => {
 	let time = performance.now();
@@ -77,14 +75,17 @@ const step = () => {
 		cells.fromString(puzzleString);
 		mode = -1;
 	}
+
+	let id = 0;
 	if (puzzleStrings) {
-		const puzzle = puzzleStrings.shift();
+		const puzzleData = puzzleStrings.shift();
+		id = puzzleData.id;
+		const puzzle = puzzleData.puzzleClues;
 		if (puzzle) {
 			cells.fromString(puzzle);
 			mode = -1;
 		} else {
-			running = false;
-			return;
+			return false;
 		}
 	}
 	const clueCount = sudokuGenerator(cells, mode);
@@ -97,6 +98,7 @@ const step = () => {
 	}
 
 	const data = {
+		id,
 		puzzle: cells.string(),
 		totalPuzzles: totalPuzzles,
 		cells: cells.toData(),
@@ -384,11 +386,19 @@ const step = () => {
 	data.message = lines;
 
 	postMessage(data);
+
+	return true;
 };
 
 onmessage = (e) => {
-	const search = e.data.search;
+	search = e.data.search;
 	puzzleString = e.data.grid ?? null;
 	stepMode = (search === "?dbphistomefel" || search === "?phistomefel") ? 2 : 0;
-	while (running) step(search);
+	if (e.data.grids) {
+		if (!puzzleStrings) puzzleStrings = [];
+		for (const data of e.data.grids) {
+			puzzleStrings.push(data);
+		}
+	}
+	while (step());
 };
