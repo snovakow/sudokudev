@@ -310,8 +310,23 @@ document.body.style.userSelect = 'none';
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
 
-	const font = "100 " + pixAlign(64 * window.devicePixelRatio) + "px " + FONT;
-	pickerDraw(font);
+	if (FONT.initialized) {
+		const font = pixAlign(64 * window.devicePixelRatio) + "px " + FONT.marker;
+		pickerDraw(font);
+	} else {
+		pickerDraw();
+	}
+}
+
+{
+	const urlOpenSansRegular = 'url(../snovakow/assets/fonts/Open_Sans/static/OpenSans-Regular.ttf)';
+	const fontOpenSansRegular = new FontFace("REGULAR", urlOpenSansRegular);
+	document.fonts.add(fontOpenSansRegular);
+	fontOpenSansRegular.load();
+	document.fonts.ready.then(() => {
+		FONT.initialized = true;
+		draw();
+	});
 }
 
 const createSelect = (options, onChange) => {
