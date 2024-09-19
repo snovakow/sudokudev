@@ -295,10 +295,27 @@ let selectedRow = 0;
 let selectedCol = 0;
 let selected = false;
 
-document.body.appendChild(picker);
-document.body.appendChild(pickerMarker);
+const puzzleData = {
+	id: 0,
+	transform: null,
+	grid: new Uint8Array(81),
+}
+Object.seal(puzzleData);
 
-document.body.style.userSelect = 'none';
+let selectPuzzleIndex = 0;
+
+const titleHeight = 28;
+
+const saveData = () => {
+	saveGrid({
+		id: puzzleData.id,
+		transform: puzzleData.transform,
+		grid: puzzleData.grid.join(""),
+		selected,
+		selectedRow,
+		selectedCol
+	});
+};
 
 const draw = () => {
 	board.draw(selected, selectedRow, selectedCol);
@@ -321,6 +338,133 @@ const draw = () => {
 		draw();
 	});
 }
+
+let superpositionMode = 0;
+const click = (event) => {
+	// event.preventDefault();
+
+	const rect = event.target.getBoundingClientRect();
+	const x = event.clientX - rect.left;
+	const y = event.clientY - rect.top;
+
+	const [row, col] = board.hitDetect(x, y, rect.width);
+
+	if (row < 0 || col < 0) return;
+
+	if (board.startCells[row * 9 + col].symbol !== 0) return;
+
+	if (selected && selectedRow === row && selectedCol === col) {
+		selected = false;
+	} else {
+		selectedRow = row;
+		selectedCol = col;
+
+		selected = true;
+		if (timer && superpositionMode === 0) superimposeCandidates(true);
+	}
+	draw();
+	saveData();
+};
+board.canvas.addEventListener('click', click);
+
+const clickLocation = (event) => {
+	const rect = event.target.getBoundingClientRect();
+	const x = event.clientX - rect.left;
+	const y = event.clientY - rect.top;
+
+	const sizeTotal = rect.width;
+
+	const r = Math.floor(y / sizeTotal * 3);
+	const c = Math.floor(x / sizeTotal * 3);
+	return [r, c];
+};
+
+const pickerClick = (event) => {
+	// event.preventDefault();
+
+	if (!selected) return;
+
+	const running = timer ? true : false;
+	if (timer) superimposeCandidates(false);
+
+	const [r, c] = clickLocation(event);
+
+	const index = r * 3 + c + 1;
+	const selectedIndex = selectedRow * 9 + selectedCol;
+	const symbol = board.cells[selectedIndex].symbol;
+	if (symbol === index) {
+		const cell = board.cells[selectedIndex];
+		cell.show = false;
+		cell.setSymbol(0);
+	} else {
+		board.cells[selectedIndex].setSymbol(index);
+	}
+
+	saveData();
+	draw();
+
+	if (running) {
+		fillSolve(board.cells, window.location.search);
+		saveData();
+		superimposeCandidates();
+	}
+};
+picker.addEventListener('click', pickerClick);
+
+const pickerMarkerClick = (event) => {
+	// event.preventDefault();
+
+	if (!selected) return;
+
+	const running = timer ? true : false;
+	if (timer) superimposeCandidates(false);
+
+	const [r, c] = clickLocation(event);
+
+	const symbol = r * 3 + c + 1;
+	const selectedIndex = selectedRow * 9 + selectedCol;
+	const cell = board.cells[selectedIndex];
+	if (cell.show) {
+		const had = cell.delete(symbol);
+		if (!had) cell.add(symbol);
+	} else {
+		cell.clear();
+		cell.add(symbol);
+		cell.show = true;
+	}
+
+	saveData();
+	draw();
+
+	if (running) {
+		fillSolve(board.cells, window.location.search);
+		saveData();
+		superimposeCandidates();
+	}
+};
+pickerMarker.addEventListener('click', pickerMarkerClick);
+
+const onFocus = () => {
+	// console.log("onFocus");
+	draw();
+};
+const offFocus = () => {
+
+};
+// window.addEventListener("focus", onFocus);
+// window.addEventListener("blur", offFocus);
+
+const orientationchange = (event) => {
+	draw();
+	console.log(event);
+};
+addEventListener("orientationchange", orientationchange);
+
+board.canvas.style.position = 'absolute';
+board.canvas.style.left = '50%';
+board.canvas.style.touchAction = "manipulation";
+picker.style.touchAction = "manipulation";
+pickerMarker.style.touchAction = "manipulation";
 
 const createSelect = (options, onChange) => {
 	const select = document.createElement('select');
@@ -365,135 +509,26 @@ const selector = createSelect(["-", ...names], (select) => {
 	draw();
 });
 selector.style.position = 'absolute';
-selector.style.width = '40px';
+selector.style.top = titleHeight / 2 + 'px';
+selector.style.left = '8px';
+selector.style.transform = 'translateY(-50%)';
 
-loadGrid();
+let loaded = false;
+if (window.name) {
+	const metadata = loadGrid();
+	if (metadata) {
+		if (metadata.selected !== undefined) selected = metadata.selected;
+		if (metadata.selectedRow !== undefined) selectedRow = metadata.selectedRow;
+		if (metadata.selectedCol !== undefined) selectedCol = metadata.selectedCol;
 
-document.body.appendChild(board.canvas);
+		if (metadata.id !== undefined) puzzleData.id = metadata.id;
+		if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
+		if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
 
-let superpositionMode = 0;
-const click = (event) => {
-	// event.preventDefault();
-
-	// Get the bounding rectangle of target
-	const rect = event.target.getBoundingClientRect();
-	// Mouse position
-	const x = event.clientX - rect.left;
-	const y = event.clientY - rect.top;
-
-	const [row, col] = board.hitDetect(x, y, rect.width);
-
-	if (row < 0 || col < 0) return;
-
-	if (board.startCells[row * 9 + col].symbol !== 0) return;
-
-	if (selected && selectedRow === row && selectedCol === col) {
-		selected = false;
-	} else {
-		selectedRow = row;
-		selectedCol = col;
-
-		selected = true;
-		if (timer && superpositionMode === 0) superimposeCandidates(true);
+		loaded = true;
 	}
 	draw();
-};
-board.canvas.addEventListener('click', click);
-
-const clickLocation = (event) => {
-	const rect = event.target.getBoundingClientRect();
-	const x = event.clientX - rect.left;
-	const y = event.clientY - rect.top;
-
-	const sizeTotal = rect.width;
-
-	const r = Math.floor(y / sizeTotal * 3);
-	const c = Math.floor(x / sizeTotal * 3);
-	return [r, c];
-};
-
-const pickerClick = (event) => {
-	// event.preventDefault();
-
-	if (!selected) return;
-
-	const running = timer ? true : false;
-	if (timer) superimposeCandidates(false);
-
-	const [r, c] = clickLocation(event);
-
-	const index = r * 3 + c + 1;
-	const selectedIndex = selectedRow * 9 + selectedCol;
-	const symbol = board.cells[selectedIndex].symbol;
-	if (symbol === index) {
-		const cell = board.cells[selectedIndex];
-		cell.show = false;
-		cell.setSymbol(0);
-	} else {
-		board.cells[selectedIndex].setSymbol(index);
-	}
-
-	draw();
-
-	saveGrid(selector.selectedIndex);
-
-	if (running) {
-		fillSolve(board.cells, window.location.search);
-		saveGrid();
-		superimposeCandidates();
-	}
-};
-picker.addEventListener('click', pickerClick);
-
-const pickerMarkerClick = (event) => {
-	// event.preventDefault();
-
-	if (!selected) return;
-
-	const running = timer ? true : false;
-	if (timer) superimposeCandidates(false);
-
-	const [r, c] = clickLocation(event);
-
-	const symbol = r * 3 + c + 1;
-	const selectedIndex = selectedRow * 9 + selectedCol;
-	const cell = board.cells[selectedIndex];
-	if (cell.show) {
-		const had = cell.delete(symbol);
-		if (!had) cell.add(symbol);
-	} else {
-		cell.clear();
-		cell.add(symbol);
-		cell.show = true;
-	}
-
-	draw();
-
-	saveGrid(selector.selectedIndex);
-
-	if (running) {
-		fillSolve(board.cells, window.location.search);
-		saveGrid();
-		superimposeCandidates();
-	}
-};
-pickerMarker.addEventListener('click', pickerMarkerClick);
-
-const onFocus = () => {
-	// console.log("onFocus");
-	draw();
-};
-const offFocus = () => {
-
-};
-// window.addEventListener("focus", onFocus);
-// window.addEventListener("blur", offFocus);
-
-const orientationchange = (event) => {
-	draw();
-	console.log(event);
-};
-addEventListener("orientationchange", orientationchange);
+}
 
 const clearButton = document.createElement('button');
 clearButton.appendChild(document.createTextNode("X"));
@@ -837,17 +872,15 @@ superpositionSymbolButton.addEventListener('click', () => {
 });
 document.body.appendChild(superpositionSymbolButton);
 
-selector.style.transform = 'translateX(-50%)';
 clearButton.style.transform = 'translateX(-50%)';
 candidateButton.style.transform = 'translateX(-50%)';
 
-candidateButton.style.touchAction = "manipulation";
+document.body.style.userSelect = 'none';
 
-board.canvas.style.position = 'absolute';
-board.canvas.style.left = '50%';
-board.canvas.style.touchAction = "manipulation";
-picker.style.touchAction = "manipulation";
-pickerMarker.style.touchAction = "manipulation";
+document.body.appendChild(board.canvas);
+
+document.body.appendChild(picker);
+document.body.appendChild(pickerMarker);
 
 const resize = () => {
 	let width = window.innerWidth;
@@ -861,9 +894,6 @@ const resize = () => {
 
 		candidateButton.style.bottom = '324px';
 		candidateButton.style.left = '96px';
-
-		selector.style.bottom = '288px';
-		selector.style.left = '96px';
 
 		clearButton.style.bottom = '200px';
 		clearButton.style.left = '96px';
@@ -882,9 +912,6 @@ const resize = () => {
 
 		candidateButton.style.bottom = '128px';
 		candidateButton.style.left = '50%';
-
-		selector.style.bottom = '96px';
-		selector.style.left = '50%';
 
 		clearButton.style.bottom = '8px';
 		clearButton.style.left = '50%';
