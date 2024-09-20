@@ -390,8 +390,11 @@ const step = () => {
 
 onmessage = (e) => {
 	search = e.data.search;
+
+	const searchParams = new URLSearchParams(search);
+
 	puzzleString = e.data.grid ?? null;
-	stepMode = (search === "?dbphistomefel" || search === "?phistomefel") ? 2 : 0;
+	stepMode = (searchParams.get("table") == "phistomefel") ? 2 : 0;
 	if (e.data.grids) {
 		if (!puzzleStrings) puzzleStrings = [];
 		for (const data of e.data.grids) {

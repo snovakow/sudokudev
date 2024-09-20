@@ -34,7 +34,13 @@
 			}
 		};
 
-		const sendData = (data, dbphistomefel = false) => {
+		const searchParams = new URLSearchParams(window.location.search);
+
+		const table = searchParams.get("table");
+
+		const sendData = (data) => {
+			if (!table) return;
+
 			let url = 'https://snovakow.dev/sudokulib/import.php?version=1';
 			url += '&puzzleClues=' + data.puzzleClues;
 			url += '&puzzleFilled=' + data.puzzleFilled;
@@ -56,7 +62,7 @@
 			url += '&phistomefel=' + data.phistomefel;
 			url += '&superpositions=' + data.superpositions;
 			url += '&bruteForce=' + data.bruteForce;
-			if (dbphistomefel) url += '&dbphistomefel';
+			url += '&table=' + table;
 
 			fetch(url, { method: "GET" /* default, so we can ignore */ });
 		};
@@ -64,12 +70,14 @@
 		let readyData = [];
 		let readyDataSent = 0;
 		let readyDataMax = 0;
-		const updateData = (data, dbphistomefel = false) => {
+		const updateData = (data) => {
+			const table = searchParams.get("table");
+			if (!table) return;
+
 			readyData.push(data);
 			if (readyData.length < 1000) return;
 
-			let url = 'https://snovakow.dev/sudokulib/update.php?version=1';
-			if (dbphistomefel) url += '&dbphistomefel';
+			const url = 'https://snovakow.dev/sudokulib/update.php?version=1&table=' + table;
 
 			const readyDataSend = [];
 			for (const ready of readyData) {
@@ -97,7 +105,6 @@
 				readyDataSend.push(ready);
 			}
 
-			if (dbphistomefel) post.dbphistomefel = true;
 			readyDataSent += readyData.length;
 			const readyDataValue = readyDataSent;
 			const response = fetch(url, {
@@ -122,17 +129,16 @@
 		const processGenerate = (grids) => {
 			const workerData = { search: window.location.search };
 			workerData.run = true;
-			const prop = "?grid=";
-			if (window.location.search.startsWith(prop) && window.location.search.length === prop.length + 81) {
-				workerData.grid = window.location.search.substring(prop.length);
+			const grid = searchParams.get("grid");
+			if (grid && grid.length === 81) {
+				workerData.grid = grid;
 			}
 			workerData.grids = grids;
 
 			worker.onmessage = (e) => {
 				const data = e.data;
 				if (data.message) setMessage(data.message);
-				if (window.location.search === "?db") sendData(data);
-				if (window.location.search === "?dbphistomefel") sendData(data, true);
+				sendData(data);
 			};
 
 			worker.postMessage(workerData);
@@ -149,8 +155,7 @@
 			worker.onmessage = (e) => {
 				const data = e.data;
 				if (data.message) setMessage(data.message);
-				if (window.location.search === "?db") updateData(data);
-				if (window.location.search === "?dbphistomefel") updateData(data, true);
+				sendData(data);
 			};
 
 			const sendRequest = () => {
@@ -182,7 +187,7 @@
 						worker.postMessage(workerData);
 					}
 				};
-				const url = `https://snovakow.dev/sudokulib/feedSudoku.php?start=${start}&end=${start + inc}`;
+				const url = `https://snovakow.dev/sudokulib/feedSudoku.php?start=${start}&end=${start + inc}&table=${table}`;
 				xhttp.open("GET", url, true);
 				xhttp.send();
 			}
