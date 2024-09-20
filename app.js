@@ -3,8 +3,7 @@ import { consoleOut, fillSolve } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 import {
-	bentWings, candidates, hiddenSingles, jellyfish, nakedSingles,
-	NakedHiddenGroups, omissions, swordfish, uniqueRectangle, xWing
+	bentWings, candidates, hiddenSingles, jellyfish, nakedSingles, NakedHiddenGroups, omissions
 } from "../sudokulib/solver.js";
 
 const raws = [
