@@ -116,7 +116,6 @@
 				if (readyDataSend.length === maxSend) break;
 			}
 			readyData.splice(0, readyDataSend.length);
-			console.log(readyDataSend.length);
 
 			const response = fetch(url, {
 				method: "POST",
