@@ -42,6 +42,8 @@
 		sentDisplay.style.position = 'absolute';
 		sentDisplay.style.top = '88px';
 		sentDisplay.style.right = '8px';
+		sentDisplay.style.fontFamily = 'Courier New';
+		sentDisplay.style.visibility = 'hidden';
 		sentDisplay.textContent = "0 Sent";
 		document.body.appendChild(sentDisplay);
 
@@ -154,6 +156,8 @@
 		};
 
 		const processUpdate = () => {
+			sentDisplay.style.visibility = 'visible';
+
 			const inc = 10000;
 			const end = 10000000;
 			let start = 0;
