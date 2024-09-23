@@ -68,7 +68,7 @@ const clueCounter = new Map();
 let search = "";
 let stepMode = 0; // 1=row 2=phist
 const step = () => {
-	let time = performance.now();
+	const time = performance.now();
 
 	let mode = stepMode;
 	if (puzzleString) {
