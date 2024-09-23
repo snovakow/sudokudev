@@ -38,6 +38,15 @@
 
 		const table = searchParams.get("table");
 
+		const sentDisplay = document.createElement('span');
+		sentDisplay.style.position = 'absolute';
+		sentDisplay.style.top = '88px';
+		sentDisplay.style.right = '8px';
+		sentDisplay.textContent = "0 Sent";
+		document.body.appendChild(sentDisplay);
+
+		let totalSent = 0;
+		const readyData = [];
 		const sendData = (data) => {
 			if (!table) return;
 
@@ -67,19 +76,20 @@
 			fetch(url, { method: "GET" /* default, so we can ignore */ });
 		};
 
-		let readyData = [];
-		let readyDataSent = 0;
-		let readyDataMax = 0;
+		let readyDataSending = false;
+		const maxSend = 1000;
 		const updateData = (data) => {
+			if (data) readyData.push(data);
+			if (readyDataSending) return;
+			readyDataSending = true;
+
 			const table = searchParams.get("table");
 			if (!table) return;
-
-			readyData.push(data);
-			if (readyData.length < 1000) return;
 
 			const url = 'https://snovakow.dev/sudokulib/update.php?version=1&table=' + table;
 
 			const readyDataSend = [];
+			let readyDataSent = 0;
 			for (const ready of readyData) {
 				const post = {
 					version: 1,
@@ -103,18 +113,17 @@
 					bruteForce: ready.bruteForce
 				};
 				readyDataSend.push(ready);
+				if (readyDataSend.length === maxSend) break;
 			}
+			readyData.splice(0, readyDataSend.length);
+			console.log(readyDataSend.length);
 
-			readyDataSent += readyData.length;
-			const readyDataValue = readyDataSent;
 			const response = fetch(url, {
 				method: "POST",
 				body: JSON.stringify(readyDataSend),
 			}).then(response => {
-				if (readyData.length > readyDataMax) readyDataMax = readyData.length;
-				if (readyDataValue === 1000 || readyDataValue === 10000 || readyDataValue === 100000 || readyDataValue % 1000000 === 0) {
-					console.log(readyDataValue + " sent " + readyDataMax);
-				}
+				readyDataSending = false;
+				if (readyData.length > 0) updateData();
 				// response.text().then(
 				// 	(string)=>{
 				// 		console.log(string);
@@ -122,7 +131,8 @@
 				// );
 			});
 
-			readyData = [];
+			totalSent += readyDataSend.length;
+			sentDisplay.textContent = totalSent + " Sent";
 		};
 
 		let worker = null;
@@ -155,7 +165,7 @@
 			worker.onmessage = (e) => {
 				const data = e.data;
 				if (data.message) setMessage(data.message);
-				sendData(data);
+				updateData(data);
 			};
 
 			const sendRequest = () => {
@@ -174,7 +184,6 @@
 							minute: "numeric",
 							second: "numeric",
 						};
-						const now = performance.now();
 						const json = JSON.parse(xhttp.responseText);
 						// fillContent(json.length, time);
 
