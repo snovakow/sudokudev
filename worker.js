@@ -1,5 +1,5 @@
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
-import { sudokuGenerator, fillSolve, totalPuzzles } from "../sudokulib/generator.js";
+import { sudokuGenerator, fillSolve, totalPuzzles, STRATEGY, STRATEGIES } from "../sudokulib/generator.js";
 import { REDUCE } from "../sudokulib/solver.js";
 
 const cells = new Grid();
@@ -65,7 +65,6 @@ let puzzleStrings = null;
 
 const clueCounter = new Map();
 
-let search = "";
 let stepMode = 0; // 1=row 2=phist
 const step = () => {
 	const time = performance.now();
@@ -103,7 +102,12 @@ const step = () => {
 		message: null
 	};
 
-	const result = fillSolve(cells, search);
+	// const save = cells.toData();
+	// for(const strategy of STRATEGIES) {
+	// 	const strategyResult = fillSolve(cells, strategy);
+	// 	cells.fromData(save);
+	// }
+	const result = fillSolve(cells, STRATEGY.ALL);
 
 	data.puzzleClues = data.puzzle;
 	data.puzzleFilled = cells.string();
@@ -389,12 +393,8 @@ const step = () => {
 };
 
 onmessage = (e) => {
-	search = e.data.search;
-
-	const searchParams = new URLSearchParams(search);
-
 	puzzleString = e.data.grid ?? null;
-	stepMode = (searchParams.get("table") == "phistomefel") ? 2 : 0;
+	stepMode = 0; // (searchParams.get("table") == "phistomefel") ? 2 : 0;
 	if (e.data.grids) {
 		if (!puzzleStrings) puzzleStrings = [];
 		for (const data of e.data.grids) {
