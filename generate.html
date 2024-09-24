@@ -138,7 +138,7 @@
 
 		let worker = null;
 		const processGenerate = (grids) => {
-			const workerData = { search: window.location.search };
+			const workerData = {};
 			workerData.run = true;
 			const grid = searchParams.get("grid");
 			if (grid && grid.length === 81) {
@@ -193,7 +193,7 @@
 						start += inc;
 						if (start < end) sendRequest();
 
-						const workerData = { search: window.location.search };
+						const workerData = {};
 						workerData.run = true;
 						workerData.grids = json;
 						worker.postMessage(workerData);
