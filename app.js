@@ -1,5 +1,5 @@
 import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
-import { consoleOut, fillSolve } from "../sudokulib/generator.js";
+import { consoleOut, fillSolve, generateFromSeed, generateTransform, STRATEGY } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
 import {
@@ -403,7 +403,7 @@ const pickerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells, window.location.search);
+		fillSolve(board.cells);
 		saveData();
 		superimposeCandidates();
 	}
@@ -436,7 +436,7 @@ const pickerMarkerClick = (event) => {
 	draw();
 
 	if (running) {
-		fillSolve(board.cells, window.location.search);
+		fillSolve(board.cells);
 		saveData();
 		superimposeCandidates();
 	}
@@ -484,19 +484,51 @@ const createSelect = (options, onChange) => {
 	return select;
 };
 
+const loadSudoku = () => {
+	const xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = () => {
+		if (xhttp.readyState == 4 && xhttp.status == 200) {
+			const fields = xhttp.responseText.split(":");
+			if (fields.length !== 3) return;
+
+			const puzzleId = parseInt(fields[0]);
+			const puzzle = fields[1];
+			if (puzzle.length !== 81) return;
+			const grid = fields[2];
+			if (grid.length !== 81) return;
+
+			const transform = generateTransform();
+			const puzzleTransformed = generateFromSeed(puzzle, transform);
+			const gridTransformed = generateFromSeed(grid, transform);
+
+			const puzzleString = puzzleTransformed.join("");
+			board.cells.fromString(puzzleString);
+			for (const cell of board.cells) {
+				cell.show = false;
+				const startCell = board.startCells[cell.index];
+				startCell.symbol = cell.symbol;
+			}
+
+			puzzleData.id = puzzleId;
+			puzzleData.transform = transform;
+			puzzleData.grid = gridTransformed;
+
+			saveData();
+			draw();
+		}
+	};
+	const uid = performance.now().toString() + Math.random().toString();
+	const search = window.location.search ? window.location.search : "?table=puzzles1&strategy=hidden4&uid=" + uid;
+	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
+	xhttp.send();
+};
+
 const names = [];
 for (const sudoku of sudokuSamples) names.push(sudoku[9]);
 
 const selector = createSelect(["-", ...names], (select) => {
 	if (select.selectedIndex === 0) {
-		for (let i = 0; i < 81; i++) {
-			const cell = board.cells[i];
-			cell.show = false;
-			cell.setSymbol(0);
-			board.startCells[i].symbol = 0;
-		}
-		saveGrid();
-		draw();
+		loadSudoku();
 		return;
 	}
 
@@ -504,7 +536,14 @@ const selector = createSelect(["-", ...names], (select) => {
 
 	const index = select.selectedIndex - 1;
 	board.setGrid(index < sudokuSamples.length ? sudokuSamples[index] : sudokuSamples[index - sudokuSamples.length]);
-	saveGrid(select.selectedIndex);
+
+	const grid = new Uint8Array(81);
+	for (let i = 0; i < 81; i++)grid[i] = board.cells[i].symbol;
+	puzzleData.id = select.selectedIndex;
+	puzzleData.transform = null;
+	puzzleData.grid = grid;
+
+	saveData();
 	draw();
 });
 selector.style.position = 'absolute';
@@ -524,9 +563,18 @@ if (window.name) {
 		if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 		if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
 
+		if(puzzleData.transform) {
+			selector.selectedIndex = 0;
+		} else {
+			selector.selectedIndex = metadata.id;			
+		}
+
 		loaded = true;
 	}
 	draw();
+}
+if (!loaded) {
+	loadSudoku();
 }
 
 const clearButton = document.createElement('button');
@@ -537,7 +585,7 @@ clearButton.style.height = '32px';
 clearButton.addEventListener('click', () => {
 	selected = false;
 	board.resetGrid();
-	saveGrid();
+	saveData();
 	draw();
 });
 document.body.appendChild(clearButton);
@@ -555,12 +603,12 @@ candidateButton.addEventListener('click', () => {
 
 	const now = performance.now();
 
-	const result = fillSolve(board.cells, window.location.search);
+	const result = fillSolve(board.cells);
 	console.log("----- " + (performance.now() - now) / 1000);
 	for (const line of consoleOut(result)) console.log(line);
 
 	draw();
-	saveGrid();
+	saveData();
 });
 document.body.appendChild(candidateButton);
 
