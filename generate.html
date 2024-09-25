@@ -47,10 +47,15 @@
 		sentDisplay.textContent = "0 Sent";
 		document.body.appendChild(sentDisplay);
 
-		let totalSent = 0;
-		const readyData = [];
-		const sendData = (data) => {
+		const sendDataStack = [];
+		let sendDataSending = false;
+		let sendDataSent = 0;
+		const sendData = (currentData) => {
 			if (!table) return;
+			if (currentData) sendDataStack.push(currentData);
+			if (sendDataSending) return;
+
+			const data = sendDataStack.shift();
 
 			let url = 'https://snovakow.dev/sudokulib/import.php?version=1';
 			url += '&puzzleClues=' + data.puzzleClues;
@@ -75,15 +80,23 @@
 			url += '&bruteForce=' + data.bruteForce;
 			url += '&table=' + table;
 
-			fetch(url, { method: "GET" /* default, so we can ignore */ });
+			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
+				sendDataSent++;
+				sentDisplay.textContent = sendDataSent + " Sent";
+
+				sendDataSending = false;
+				if (sendDataStack.length > 0) sendData();
+			});
 		};
 
-		let readyDataSending = false;
+		const updateDataStack = [];
+		let updateDataSending = false;
+		let updateDataSent = 0;
 		const maxSend = 1000;
 		const updateData = (data) => {
-			if (data) readyData.push(data);
-			if (readyDataSending) return;
-			readyDataSending = true;
+			if (data) updateDataStack.push(data);
+			if (updateDataSending) return;
+			updateDataSending = true;
 
 			const table = searchParams.get("table");
 			if (!table) return;
@@ -92,7 +105,7 @@
 
 			const readyDataSend = [];
 			let readyDataSent = 0;
-			for (const ready of readyData) {
+			for (const ready of updateDataStack) {
 				const post = {
 					version: 1,
 					id: ready.id,
@@ -117,14 +130,14 @@
 				readyDataSend.push(ready);
 				if (readyDataSend.length === maxSend) break;
 			}
-			readyData.splice(0, readyDataSend.length);
+			updateDataStack.splice(0, readyDataSend.length);
 
-			const response = fetch(url, {
+			fetch(url, {
 				method: "POST",
 				body: JSON.stringify(readyDataSend),
 			}).then(response => {
-				readyDataSending = false;
-				if (readyData.length > 0) updateData();
+				updateDataSending = false;
+				if (updateDataStack.length > 0) updateData();
 				// response.text().then(
 				// 	(string)=>{
 				// 		console.log(string);
@@ -132,12 +145,14 @@
 				// );
 			});
 
-			totalSent += readyDataSend.length;
-			sentDisplay.textContent = totalSent + " Sent";
+			updateDataSent += readyDataSend.length;
+			sentDisplay.textContent = updateDataSent + " Sent";
 		};
 
 		let worker = null;
 		const processGenerate = (grids) => {
+			sentDisplay.style.visibility = 'visible';
+
 			const workerData = {};
 			workerData.run = true;
 			const grid = searchParams.get("grid");
