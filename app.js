@@ -2,9 +2,7 @@ import { FONT, board, loadGrid, saveGrid } from "../sudokulib/board.js";
 import { consoleOut, fillSolve, generateFromSeed, generateTransform, STRATEGY } from "../sudokulib/generator.js";
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.js";
-import {
-	bentWings, candidates, hiddenSingles, jellyfish, nakedSingles, NakedHiddenGroups, omissions
-} from "../sudokulib/solver.js";
+import { candidates, nakedSingles, hiddenSingles } from "../sudokulib/solver.js";
 
 const raws = [
 	"Unsolvable 606",
@@ -271,8 +269,8 @@ const raws = [
 		0, 5, 0, 0, 1, 0, 0, 2, 0,
 		0, 0, 9, 0, 0, 0, 8, 0, 0,
 	],
-	"Snake",
-	'607901300903070000050030000000120680002589000500000000300007906000060400700300800'.split(''),
+	// "Snake",
+	// '607901300903070000050030000000120680002589000500000000300007906000060400700300800'.split(''),
 ];
 const sudokuSamples = [];
 for (let rawIndex = 0; rawIndex < raws.length; rawIndex += 2) {
@@ -563,10 +561,10 @@ if (window.name) {
 		if (metadata.transform !== undefined) puzzleData.transform = metadata.transform;
 		if (metadata.grid !== undefined) puzzleData.grid.set(metadata.grid);
 
-		if(puzzleData.transform) {
+		if (puzzleData.transform) {
 			selector.selectedIndex = 0;
 		} else {
-			selector.selectedIndex = metadata.id;			
+			selector.selectedIndex = metadata.id;
 		}
 
 		loaded = true;
@@ -635,34 +633,6 @@ const superimposeCandidates = (reset = false) => {
 			if (progress) continue;
 
 			progress = hiddenSingles(cells);
-			if (progress) continue;
-
-			// const nakedHiddenResult = new NakedHiddenGroups(cells).nakedHiddenSets();
-			// if (nakedHiddenResult) {
-			// 	progress = true;
-			// 	continue;
-			// }
-
-			// progress = omissions(cells);
-			// if (progress) continue;
-
-			// const bentWingResults = bentWings(cells);
-			// if (bentWingResults.length > 0) {
-			// 	progress = true;
-			// 	continue;
-			// }
-
-			// progress = xWing(cells);
-			// if (progress) { continue; }
-
-			// progress = swordfish(cells);
-			// if (progress) { continue; }
-
-			// progress = jellyfish(cells);
-			// if (progress) { continue; }
-
-			// progress = uniqueRectangle(cells);
-			// if (progress) { continue; }
 		} while (progress);
 	};
 
