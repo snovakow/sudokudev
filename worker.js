@@ -1,6 +1,5 @@
 import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { sudokuGenerator, fillSolve, totalPuzzles, STRATEGY, STRATEGIES } from "../sudokulib/generator.js";
-import { REDUCE } from "../sudokulib/solver.js";
 
 const cells = new Grid();
 for (const index of Grid.indices) cells[index] = new CellCandidate(index);
@@ -102,11 +101,7 @@ const step = () => {
 		message: null
 	};
 
-	// const save = cells.toData();
-	// for(const strategy of STRATEGIES) {
-	// 	const strategyResult = fillSolve(cells, strategy);
-	// 	cells.fromData(save);
-	// }
+	const save = cells.toData();
 	const result = fillSolve(cells, STRATEGY.ALL);
 
 	data.puzzleClues = data.puzzle;
@@ -154,7 +149,8 @@ const step = () => {
 	let simple = true;
 	simple &&= result.nakedHiddenSetsReduced.length === 0;
 	simple &&= result.omissionsReduced === 0;
-	simple &&= result.bentWingsReduced.length === 0;
+	simple &&= result.yWingReduced === 0;
+	simple &&= result.xyzWingReduced === 0;
 	simple &&= result.xWingReduced === 0;
 	simple &&= result.swordfishReduced === 0;
 	simple &&= result.jellyfishReduced === 0;
@@ -167,63 +163,95 @@ const step = () => {
 
 	if (simple) simples++;
 	else {
-		if (result.nakedHiddenSetsReduced.length > 0) {
-			for (const set of result.nakedHiddenSetsReduced) {
-				if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
+		// STRATEGY.NAKED
+		if (result.omissionsReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.INTERSECTION_REMOVAL);
+			result.omissionsReduced = strategyResult.omissionsReduced;
+		}
+		if (result.uniqueRectangleReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.DEADLY_PATTERN);
+			result.uniqueRectangleReduced = strategyResult.uniqueRectangleReduced;
+		}
+		// STRATEGY.HIDDEN
+		if (result.yWingReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.Y_WING);
+			result.yWingReduced = strategyResult.yWingReduced;
+		}
+		if (result.xyzWingReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.XYZ_WING);
+			result.xyzWingReduced = strategyResult.xyzWingReduced;
+		}
+		if (result.xWingReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.X_WING);
+			result.xWingReduced = strategyResult.xWingReduced;
+		}
+		if (result.swordfishReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.SWORDFISH);
+			result.swordfishReduced = strategyResult.swordfishReduced;
+		}
+		if (result.jellyfishReduced > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.JELLYFISH);
+			result.jellyfishReduced = strategyResult.jellyfishReduced;
+		}
 
-				else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
-				else if (set.max === 5 && set.nakedSize === 3) set5_3_2++;
+		for (const set of result.nakedHiddenSetsReduced) {
+			if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
 
-				else if (set.max === 6 && set.nakedSize === 2) set6_2_4++;
-				else if (set.max === 6 && set.nakedSize === 3) set6_3_3++;
-				else if (set.max === 6 && set.nakedSize === 4) set6_4_2++;
+			else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
+			else if (set.max === 5 && set.nakedSize === 3) set5_3_2++;
 
-				else if (set.max === 7 && set.nakedSize === 2) set7_2_5++;
-				else if (set.max === 7 && set.nakedSize === 3) set7_3_4++;
-				else if (set.max === 7 && set.nakedSize === 4) set7_4_3++;
-				else if (set.max === 7 && set.nakedSize === 5) set7_5_2++;
+			else if (set.max === 6 && set.nakedSize === 2) set6_2_4++;
+			else if (set.max === 6 && set.nakedSize === 3) set6_3_3++;
+			else if (set.max === 6 && set.nakedSize === 4) set6_4_2++;
 
-				else if (set.max === 8 && set.nakedSize === 2) set8_2_6++;
-				else if (set.max === 8 && set.nakedSize === 3) set8_3_5++;
-				else if (set.max === 8 && set.nakedSize === 4) set8_4_4++;
-				else if (set.max === 8 && set.nakedSize === 5) set8_5_3++;
-				else if (set.max === 8 && set.nakedSize === 6) set8_6_2++;
+			else if (set.max === 7 && set.nakedSize === 2) set7_2_5++;
+			else if (set.max === 7 && set.nakedSize === 3) set7_3_4++;
+			else if (set.max === 7 && set.nakedSize === 4) set7_4_3++;
+			else if (set.max === 7 && set.nakedSize === 5) set7_5_2++;
 
-				else if (set.max === 9 && set.nakedSize === 2) set9_2_7++;
-				else if (set.max === 9 && set.nakedSize === 3) set9_3_6++;
-				else if (set.max === 9 && set.nakedSize === 4) set9_4_5++;
-				else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
-				else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
-				else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
+			else if (set.max === 8 && set.nakedSize === 2) set8_2_6++;
+			else if (set.max === 8 && set.nakedSize === 3) set8_3_5++;
+			else if (set.max === 8 && set.nakedSize === 4) set8_4_4++;
+			else if (set.max === 8 && set.nakedSize === 5) set8_5_3++;
+			else if (set.max === 8 && set.nakedSize === 6) set8_6_2++;
 
-				if (set.nakedSize === 2) setNaked2++;
-				else if (set.nakedSize === 3) setNaked3++;
-				else if (set.nakedSize === 4) setNaked4++;
-				else if (set.hiddenSize === 2) setHidden2++;
-				else if (set.hiddenSize === 3) setHidden3++;
-				else if (set.hiddenSize === 4) setHidden4++;
+			else if (set.max === 9 && set.nakedSize === 2) set9_2_7++;
+			else if (set.max === 9 && set.nakedSize === 3) set9_3_6++;
+			else if (set.max === 9 && set.nakedSize === 4) set9_4_5++;
+			else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
+			else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
+			else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
 
-				if (set.nakedSize === 2) data.naked2++;
-				else if (set.nakedSize === 3) data.naked3++;
-				else if (set.nakedSize === 4) data.naked4++;
-				else if (set.hiddenSize === 2) data.hidden2++;
-				else if (set.hiddenSize === 3) data.hidden3++;
-				else if (set.hiddenSize === 4) data.hidden4++;
-			}
+			if (set.nakedSize === 2) setNaked2++;
+			else if (set.nakedSize === 3) setNaked3++;
+			else if (set.nakedSize === 4) setNaked4++;
+			else if (set.hiddenSize === 2) setHidden2++;
+			else if (set.hiddenSize === 3) setHidden3++;
+			else if (set.hiddenSize === 4) setHidden4++;
+
+			if (set.nakedSize === 2) data.naked2++;
+			else if (set.nakedSize === 3) data.naked3++;
+			else if (set.nakedSize === 4) data.naked4++;
+			else if (set.hiddenSize === 2) data.hidden2++;
+			else if (set.hiddenSize === 3) data.hidden3++;
+			else if (set.hiddenSize === 4) data.hidden4++;
 		}
 
 		omissionsReduced += result.omissionsReduced;
 		data.omissions += result.omissionsReduced;
 
-		if (result.bentWingsReduced.length > 0) {
-			for (const reduced of result.bentWingsReduced) {
-				if (reduced.strategy === REDUCE.Y_Wing) yWingReduced++;
-				if (reduced.strategy === REDUCE.XYZ_Wing) xyzWingReduced++;
+		yWingReduced += result.yWingReduced;
+		data.yWing += result.yWingReduced;
 
-				if (reduced.strategy === REDUCE.Y_Wing) data.yWing++;
-				if (reduced.strategy === REDUCE.XYZ_Wing) data.xyzWing++;
-			}
-		}
+		xyzWingReduced += result.xyzWingReduced;
+		data.xyzWing += result.xyzWingReduced;
 
 		xWingReduced += result.xWingReduced;
 		data.xWing += result.xWingReduced;
