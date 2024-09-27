@@ -69,15 +69,30 @@
 			url += '&hidden3=' + data.hidden3;
 			url += '&hidden4=' + data.hidden4;
 			url += '&omissions=' + data.omissions;
+			url += '&uniqueRectangle=' + data.uniqueRectangle;
 			url += '&yWing=' + data.yWing;
 			url += '&xyzWing=' + data.xyzWing;
 			url += '&xWing=' + data.xWing;
 			url += '&swordfish=' + data.swordfish;
 			url += '&jellyfish=' + data.jellyfish;
-			url += '&uniqueRectangle=' + data.uniqueRectangle;
 			url += '&phistomefel=' + data.phistomefel;
 			url += '&superpositions=' + data.superpositions;
 			url += '&bruteForce=' + data.bruteForce;
+
+			url += '&has_naked2=' + data.has_naked2;
+			url += '&has_naked3=' + data.has_naked3;
+			url += '&has_naked4=' + data.has_naked4;
+			url += '&has_hidden2=' + data.has_hidden2;
+			url += '&has_hidden3=' + data.has_hidden3;
+			url += '&has_hidden4=' + data.has_hidden4;
+			url += '&has_omissions=' + data.has_omissions;
+			url += '&has_uniqueRectangle=' + data.has_uniqueRectangle;
+			url += '&has_yWing=' + data.has_yWing;
+			url += '&has_xyzWing=' + data.has_xyzWing;
+			url += '&has_xWing=' + data.has_xWing;
+			url += '&has_swordfish=' + data.has_swordfish;
+			url += '&has_jellyfish=' + data.has_jellyfish;
+
 			url += '&table=' + table;
 
 			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
@@ -94,12 +109,11 @@
 		let updateDataSent = 0;
 		const maxSend = 1000;
 		const updateData = (data) => {
+			if (!table) return;
+
 			if (data) updateDataStack.push(data);
 			if (updateDataSending) return;
 			updateDataSending = true;
-
-			const table = searchParams.get("table");
-			if (!table) return;
 
 			const url = 'https://snovakow.dev/sudokulib/update.php?version=1&table=' + table;
 
@@ -125,7 +139,21 @@
 					uniqueRectangle: ready.uniqueRectangle,
 					phistomefel: ready.phistomefel,
 					superpositions: ready.superpositions,
-					bruteForce: ready.bruteForce
+					bruteForce: ready.bruteForce,
+
+					has_naked2: ready.has_naked2,
+					has_naked3: ready.has_naked3,
+					has_naked4: ready.has_naked4,
+					has_hidden2: ready.has_hidden2,
+					has_hidden3: ready.has_hidden3,
+					has_hidden4: ready.has_hidden4,
+					has_omissions: ready.has_omissions,
+					has_uniqueRectangle: ready.has_uniqueRectangle,
+					has_yWing: ready.has_yWing,
+					has_xyzWing: ready.has_xyzWing,
+					has_xWing: ready.has_xWing,
+					has_swordfish: ready.has_swordfish,
+					has_jellyfish: ready.has_jellyfish,
 				};
 				readyDataSend.push(ready);
 				if (readyDataSend.length === maxSend) break;
@@ -137,16 +165,18 @@
 				body: JSON.stringify(readyDataSend),
 			}).then(response => {
 				updateDataSending = false;
+
+				updateDataSent += readyDataSend.length;
+				sentDisplay.textContent = updateDataSent + " Sent";
+
 				if (updateDataStack.length > 0) updateData();
+
 				// response.text().then(
 				// 	(string)=>{
 				// 		console.log(string);
 				// 	}
 				// );
 			});
-
-			updateDataSent += readyDataSend.length;
-			sentDisplay.textContent = updateDataSent + " Sent";
 		};
 
 		let worker = null;
