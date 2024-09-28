@@ -4,32 +4,9 @@ import { sudokuGenerator, fillSolve, totalPuzzles, STRATEGY, STRATEGIES } from "
 const cells = new Grid();
 for (const index of Grid.indices) cells[index] = new CellCandidate(index);
 
-let set4_2_2 = 0;
+let simples = 0;
 
-let set5_2_3 = 0;
-let set5_3_2 = 0;
-
-let set6_2_4 = 0;
-let set6_3_3 = 0;
-let set6_4_2 = 0;
-
-let set7_2_5 = 0;
-let set7_3_4 = 0;
-let set7_4_3 = 0;
-let set7_5_2 = 0;
-
-let set8_2_6 = 0;
-let set8_3_5 = 0;
-let set8_4_4 = 0;
-let set8_5_3 = 0;
-let set8_6_2 = 0;
-
-let set9_2_7 = 0;
-let set9_3_6 = 0;
-let set9_4_5 = 0;
-let set9_5_4 = 0;
-let set9_6_3 = 0;
-let set9_7_2 = 0;
+let candidates = 0;
 
 let setNaked2 = 0;
 let setNaked3 = 0;
@@ -37,11 +14,6 @@ let setNaked4 = 0;
 let setHidden2 = 0;
 let setHidden3 = 0;
 let setHidden4 = 0;
-
-let simples = 0;
-
-let candidates = 0;
-
 let omissionsReduced = 0;
 let yWingReduced = 0;
 let xyzWingReduced = 0;
@@ -145,8 +117,12 @@ const step = () => {
 	const phistomefelResult = (result.phistomefelReduced > 0 || result.phistomefelFilled > 0);
 
 	let simple = true;
-	simple &&= result.nakedSetsReduced.length === 0;
-	simple &&= result.hiddenSetsReduced.length === 0;
+	simple &&= result.naked2Reduced === 0;
+	simple &&= result.naked3Reduced === 0;
+	simple &&= result.naked4Reduced === 0;
+	simple &&= result.hidden2Reduced === 0;
+	simple &&= result.hidden3Reduced === 0;
+	simple &&= result.hidden4Reduced === 0;
 	simple &&= result.omissionsReduced === 0;
 	simple &&= result.yWingReduced === 0;
 	simple &&= result.xyzWingReduced === 0;
@@ -176,46 +152,50 @@ const step = () => {
 
 	if (simple) simples++;
 	else {
-		if (result.nakedSetsReduced.length > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.NAKED, true);
-			if (!strategyResult.bruteForceFill) {
-				for (const set of strategyResult.nakedSetsReduced) {
-					if (set.nakedSize === 2) data.has_naked2++;
-					else if (set.nakedSize === 3) data.has_naked3++;
-					else if (set.nakedSize === 4) data.has_naked4++;
+		const processSet = (set2Property, set3Property, set4Property, data2Property, data3Property, data4Property, strategy) => {
+			if (result[set2Property] > 0 || result[set3Property] > 0 || result[set4Property] > 0) {
+				cells.fromData(save);
+				const strategyResult = fillSolve(cells, strategy, false);
 
-					if (set.nakedSize === 2) setNaked2++;
-					else if (set.nakedSize === 3) setNaked3++;
-					else if (set.nakedSize === 4) setNaked4++;
+				result[set2Property] = strategyResult[set2Property];
+				result[set3Property] = strategyResult[set3Property];
+				result[set4Property] = strategyResult[set4Property];
+				if (strategyResult[set2Property] > 0 || strategyResult[set3Property] > 0 || strategyResult[set4Property] > 0) {
+					cells.fromData(save);
+					const resultIsolated = fillSolve(cells, strategy, true);
+
+					if (!resultIsolated.bruteForceFill) {
+						if (resultIsolated[set2Property] <= strategyResult[set2Property]) data[data2Property] = resultIsolated[set2Property];
+						if (resultIsolated[set3Property] <= strategyResult[set3Property]) data[data3Property] = resultIsolated[set3Property];
+						if (resultIsolated[set4Property] <= strategyResult[set4Property]) data[data4Property] = resultIsolated[set4Property];
+					}
 				}
 			}
 		}
-		if (result.hiddenSetsReduced.length > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.HIDDEN, true);
-			if (!strategyResult.bruteForceFill) {
-				for (const set of strategyResult.hiddenSetsReduced) {
-					if (set.hiddenSize === 2) data.has_hidden2++;
-					else if (set.hiddenSize === 3) data.has_hidden3++;
-					else if (set.hiddenSize === 4) data.has_hidden4++;
+		processSet('naked2Reduced', 'naked3Reduced', 'naked4Reduced', 'has_naked2', 'has_naked3', 'has_naked4', STRATEGY.NAKED);
+		processSet('hidden2Reduced', 'hidden3Reduced', 'hidden4Reduced', 'has_hidden2', 'has_hidden3', 'has_hidden4', STRATEGY.HIDDEN);
 
-					if (set.hiddenSize === 2) setHidden2++;
-					else if (set.hiddenSize === 3) setHidden3++;
-					else if (set.hiddenSize === 4) setHidden4++;
-				}
-			}
-		}
 		const processStrategy = (resultProperty, dataProperty, strategy) => {
-			if (result[resultProperty] == 0) return;
+			if (result[resultProperty] === 0) return;
 
 			cells.fromData(save);
-			const strategyResult = fillSolve(cells, strategy, true);
+			const strategyResult = fillSolve(cells, strategy, false);
 			const strategyResultValue = strategyResult[resultProperty];
+
+			result[resultProperty] = strategyResultValue;
 			if (strategyResultValue > 0) {
-				if (!strategyResult.bruteForceFill) data[dataProperty] = strategyResultValue;
+				cells.fromData(save);
+				const resultIsolated = fillSolve(cells, strategy, true);
+
+				if (!resultIsolated.bruteForceFill) {
+					const isolatedValue = resultIsolated[resultProperty];
+					if (isolatedValue <= strategyResultValue) data[dataProperty] = isolatedValue;
+				}
 			}
 		}
+		processStrategy('naked2Reduced', 'has_naked2', STRATEGY.NAKED);
+		processStrategy('naked3Reduced', 'has_naked2', STRATEGY.NAKED);
+		processStrategy('naked4Reduced', 'has_naked2', STRATEGY.NAKED);
 		processStrategy('omissionsReduced', 'has_omissions', STRATEGY.INTERSECTION_REMOVAL);
 		processStrategy('uniqueRectangleReduced', 'has_uniqueRectangle', STRATEGY.DEADLY_PATTERN);
 		processStrategy('yWingReduced', 'has_yWing', STRATEGY.Y_WING);
@@ -224,46 +204,19 @@ const step = () => {
 		processStrategy('swordfishReduced', 'has_swordfish', STRATEGY.SWORDFISH);
 		processStrategy('jellyfishReduced', 'has_jellyfish', STRATEGY.JELLYFISH);
 
-		const nakedHiddenSetsReduced = [...result.nakedSetsReduced, ...result.hiddenSetsReduced];
-		for (const set of nakedHiddenSetsReduced) {
-			if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
+		setNaked2 += data.has_naked2;
+		setNaked3 += data.has_naked3;
+		setNaked4 += data.has_naked4;
+		setHidden2 += data.has_hidden2;
+		setHidden3 += data.has_hidden3;
+		setHidden4 += data.has_hidden4;
 
-			else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
-			else if (set.max === 5 && set.nakedSize === 3) set5_3_2++;
-
-			else if (set.max === 6 && set.nakedSize === 2) set6_2_4++;
-			else if (set.max === 6 && set.nakedSize === 3) set6_3_3++;
-			else if (set.max === 6 && set.nakedSize === 4) set6_4_2++;
-
-			else if (set.max === 7 && set.nakedSize === 2) set7_2_5++;
-			else if (set.max === 7 && set.nakedSize === 3) set7_3_4++;
-			else if (set.max === 7 && set.nakedSize === 4) set7_4_3++;
-			else if (set.max === 7 && set.nakedSize === 5) set7_5_2++;
-
-			else if (set.max === 8 && set.nakedSize === 2) set8_2_6++;
-			else if (set.max === 8 && set.nakedSize === 3) set8_3_5++;
-			else if (set.max === 8 && set.nakedSize === 4) set8_4_4++;
-			else if (set.max === 8 && set.nakedSize === 5) set8_5_3++;
-			else if (set.max === 8 && set.nakedSize === 6) set8_6_2++;
-
-			else if (set.max === 9 && set.nakedSize === 2) set9_2_7++;
-			else if (set.max === 9 && set.nakedSize === 3) set9_3_6++;
-			else if (set.max === 9 && set.nakedSize === 4) set9_4_5++;
-			else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
-			else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
-			else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
-		}
-
-		for (const set of result.nakedSetsReduced) {
-			if (set.nakedSize === 2) data.naked2++;
-			else if (set.nakedSize === 3) data.naked3++;
-			else if (set.nakedSize === 4) data.naked4++;
-		}
-		for (const set of result.hiddenSetsReduced) {
-			if (set.hiddenSize === 2) data.hidden2++;
-			else if (set.hiddenSize === 3) data.hidden3++;
-			else if (set.hiddenSize === 4) data.hidden4++;
-		}
+		data.naked2 += result.naked2Reduced;
+		data.naked3 += result.naked3Reduced;
+		data.naked4 += result.naked4Reduced;
+		data.hidden2 += result.hidden2Reduced;
+		data.hidden3 += result.hidden3Reduced;
+		data.hidden4 += result.hidden4Reduced;
 
 		omissionsReduced += data.has_omissions;
 		data.omissions += result.omissionsReduced;
@@ -365,45 +318,6 @@ const step = () => {
 		});
 		for (const result of ordered) {
 			printLine(result.key, result.value, superTotal);
-		}
-	}
-	const setsTotal = setNaked4 + setNaked4 + setNaked4 + setHidden2 + setHidden3 + setHidden4;
-	if (setsTotal > 0) {
-		lines.push("--- Naked Hiddens");
-		const SetOrder = class {
-			constructor(key, value) {
-				this.key = key;
-				this.value = value;
-			}
-		}
-		const ordered = [
-			new SetOrder("set5_2_3", set5_2_3),
-			new SetOrder("set4_2_2", set4_2_2),
-			new SetOrder("set6_2_4", set6_2_4),
-			new SetOrder("set5_3_2", set5_3_2),
-			new SetOrder("set6_3_3", set6_3_3),
-			new SetOrder("set6_4_2", set6_4_2),
-			new SetOrder("set7_2_5", set7_2_5),
-			new SetOrder("set7_3_4", set7_3_4),
-			new SetOrder("set7_4_3", set7_4_3),
-			new SetOrder("set7_5_2", set7_5_2),
-			new SetOrder("set8_2_6", set8_2_6),
-			new SetOrder("set8_3_5", set8_3_5),
-			new SetOrder("set8_4_4", set8_4_4),
-			new SetOrder("set8_5_3", set8_5_3),
-			new SetOrder("set8_6_2", set8_6_2),
-			new SetOrder("set9_2_7", set9_2_7),
-			new SetOrder("set9_3_6", set9_3_6),
-			new SetOrder("set9_4_5", set9_4_5),
-			new SetOrder("set9_6_3", set9_6_3),
-			new SetOrder("set9_7_2", set9_7_2),
-			new SetOrder("set9_5_4", set9_5_4),
-		];
-		ordered.sort((a, b) => {
-			return b.value - a.value;
-		});
-		for (const order of ordered) {
-			printLine(order.key, order.value, setsTotal);
 		}
 	}
 	if (candidateTotal > 0) {
