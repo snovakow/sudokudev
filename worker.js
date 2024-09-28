@@ -137,7 +137,8 @@ const step = () => {
 
 	totalTime += elapsed;
 
-	let setsTotal = 0;
+	let setsTotalNaked = 0;
+	let setsTotalHidden = 0;
 
 	if (result.bruteForceFill) {
 		data.bruteForce = 1;
@@ -147,7 +148,8 @@ const step = () => {
 	const phistomefelResult = (result.phistomefelReduced > 0 || result.phistomefelFilled > 0);
 
 	let simple = true;
-	simple &&= result.nakedHiddenSetsReduced.length === 0;
+	simple &&= result.nakedSetsReduced.length === 0;
+	simple &&= result.hiddenSetsReduced.length === 0;
 	simple &&= result.omissionsReduced === 0;
 	simple &&= result.yWingReduced === 0;
 	simple &&= result.xyzWingReduced === 0;
@@ -161,47 +163,72 @@ const step = () => {
 
 	data.simple = simple ? 1 : 0;
 
+	data.has_naked2 = 0;
+	data.has_naked3 = 0;
+	data.has_naked4 = 0;
+	data.has_hidden2 = 0;
+	data.has_hidden3 = 0;
+	data.has_hidden4 = 0;
+	data.has_omissions = 0;
+	data.has_uniqueRectangle = 0;
+	data.has_yWing = 0;
+	data.has_xyzWing = 0;
+	data.has_xWing = 0;
+	data.has_swordfish = 0;
+	data.has_jellyfish = 0;
+
 	if (simple) simples++;
 	else {
-		// STRATEGY.NAKED
-		if (result.omissionsReduced > 0) {
+		if (result.nakedSetsReduced.length > 0) {
 			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.INTERSECTION_REMOVAL);
-			result.omissionsReduced = strategyResult.omissionsReduced;
-		}
-		if (result.uniqueRectangleReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.DEADLY_PATTERN);
-			result.uniqueRectangleReduced = strategyResult.uniqueRectangleReduced;
-		}
-		// STRATEGY.HIDDEN
-		if (result.yWingReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.Y_WING);
-			result.yWingReduced = strategyResult.yWingReduced;
-		}
-		if (result.xyzWingReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.XYZ_WING);
-			result.xyzWingReduced = strategyResult.xyzWingReduced;
-		}
-		if (result.xWingReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.X_WING);
-			result.xWingReduced = strategyResult.xWingReduced;
-		}
-		if (result.swordfishReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.SWORDFISH);
-			result.swordfishReduced = strategyResult.swordfishReduced;
-		}
-		if (result.jellyfishReduced > 0) {
-			cells.fromData(save);
-			const strategyResult = fillSolve(cells, STRATEGY.JELLYFISH);
-			result.jellyfishReduced = strategyResult.jellyfishReduced;
-		}
+			const strategyResult = fillSolve(cells, STRATEGY.NAKED, true);
+			if (!strategyResult.bruteForceFill) {
+				for (const set of strategyResult.nakedSetsReduced) {
+					if (set.nakedSize === 2) data.has_naked2++;
+					else if (set.nakedSize === 3) data.has_naked3++;
+					else if (set.nakedSize === 4) data.has_naked4++;
 
-		for (const set of result.nakedHiddenSetsReduced) {
+					if (set.nakedSize === 2) setNaked2++;
+					else if (set.nakedSize === 3) setNaked3++;
+					else if (set.nakedSize === 4) setNaked4++;
+				}
+			}
+		}
+		if (result.hiddenSetsReduced.length > 0) {
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, STRATEGY.HIDDEN, true);
+			if (!strategyResult.bruteForceFill) {
+				for (const set of strategyResult.hiddenSetsReduced) {
+					if (set.hiddenSize === 2) data.has_hidden2++;
+					else if (set.hiddenSize === 3) data.has_hidden3++;
+					else if (set.hiddenSize === 4) data.has_hidden4++;
+
+					if (set.hiddenSize === 2) setHidden2++;
+					else if (set.hiddenSize === 3) setHidden3++;
+					else if (set.hiddenSize === 4) setHidden4++;
+				}
+			}
+		}
+		const processStrategy = (resultProperty, dataProperty, strategy) => {
+			if (result[resultProperty] == 0) return;
+
+			cells.fromData(save);
+			const strategyResult = fillSolve(cells, strategy, true);
+			const strategyResultValue = strategyResult[resultProperty];
+			if (strategyResultValue > 0) {
+				if (!strategyResult.bruteForceFill) data[dataProperty] = strategyResultValue;
+			}
+		}
+		processStrategy('omissionsReduced', 'has_omissions', STRATEGY.INTERSECTION_REMOVAL);
+		processStrategy('uniqueRectangleReduced', 'has_uniqueRectangle', STRATEGY.DEADLY_PATTERN);
+		processStrategy('yWingReduced', 'has_yWing', STRATEGY.Y_WING);
+		processStrategy('xyzWingReduced', 'has_xyzWing', STRATEGY.XYZ_WING);
+		processStrategy('xWingReduced', 'has_xWing', STRATEGY.X_WING);
+		processStrategy('swordfishReduced', 'has_swordfish', STRATEGY.SWORDFISH);
+		processStrategy('jellyfishReduced', 'has_jellyfish', STRATEGY.JELLYFISH);
+
+		const nakedHiddenSetsReduced = [...result.nakedSetsReduced, ...result.hiddenSetsReduced];
+		for (const set of nakedHiddenSetsReduced) {
 			if (set.max === 4 && set.nakedSize === 2) set4_2_2++;
 
 			else if (set.max === 5 && set.nakedSize === 2) set5_2_3++;
@@ -228,41 +255,38 @@ const step = () => {
 			else if (set.max === 9 && set.nakedSize === 5) set9_5_4++;
 			else if (set.max === 9 && set.nakedSize === 6) set9_6_3++;
 			else if (set.max === 9 && set.nakedSize === 7) set9_7_2++;
+		}
 
-			if (set.nakedSize === 2) setNaked2++;
-			else if (set.nakedSize === 3) setNaked3++;
-			else if (set.nakedSize === 4) setNaked4++;
-			else if (set.hiddenSize === 2) setHidden2++;
-			else if (set.hiddenSize === 3) setHidden3++;
-			else if (set.hiddenSize === 4) setHidden4++;
-
+		for (const set of result.nakedSetsReduced) {
 			if (set.nakedSize === 2) data.naked2++;
 			else if (set.nakedSize === 3) data.naked3++;
 			else if (set.nakedSize === 4) data.naked4++;
-			else if (set.hiddenSize === 2) data.hidden2++;
+		}
+		for (const set of result.hiddenSetsReduced) {
+			if (set.hiddenSize === 2) data.hidden2++;
 			else if (set.hiddenSize === 3) data.hidden3++;
 			else if (set.hiddenSize === 4) data.hidden4++;
 		}
 
-		omissionsReduced += result.omissionsReduced;
+		omissionsReduced += data.has_omissions;
 		data.omissions += result.omissionsReduced;
 
-		yWingReduced += result.yWingReduced;
+		yWingReduced += data.has_yWing;
 		data.yWing += result.yWingReduced;
 
-		xyzWingReduced += result.xyzWingReduced;
+		xyzWingReduced += data.has_xyzWing;
 		data.xyzWing += result.xyzWingReduced;
 
-		xWingReduced += result.xWingReduced;
+		xWingReduced += data.has_xWing;
 		data.xWing += result.xWingReduced;
 
-		swordfishReduced += result.swordfishReduced;
+		swordfishReduced += data.has_swordfish;
 		data.swordfish += result.swordfishReduced;
 
-		jellyfishReduced += result.jellyfishReduced;
+		jellyfishReduced += data.has_jellyfish;
 		data.jellyfish += result.jellyfishReduced;
 
-		uniqueRectangleReduced += result.uniqueRectangleReduced;
+		uniqueRectangleReduced += data.has_uniqueRectangle;
 		data.uniqueRectangle += result.uniqueRectangleReduced;
 
 		if (phistomefelResult) phistomefelCount++;
@@ -290,12 +314,12 @@ const step = () => {
 		if (!result.bruteForceFill) candidates++;
 	}
 
-	setsTotal += setNaked2;
-	setsTotal += setNaked3;
-	setsTotal += setNaked4;
-	setsTotal += setHidden2;
-	setsTotal += setHidden3;
-	setsTotal += setHidden4;
+	setsTotalNaked += setNaked2;
+	setsTotalNaked += setNaked3;
+	setsTotalNaked += setNaked4;
+	setsTotalHidden += setHidden2;
+	setsTotalHidden += setHidden3;
+	setsTotalHidden += setHidden4;
 
 	const res = 10000;
 	const percent = (val, total = totalPuzzles) => {
@@ -303,7 +327,8 @@ const step = () => {
 	}
 
 	let candidateTotal = 0;
-	candidateTotal += setsTotal;
+	candidateTotal += setsTotalNaked;
+	candidateTotal += setsTotalHidden;
 	candidateTotal += omissionsReduced;
 	candidateTotal += yWingReduced;
 	candidateTotal += xyzWingReduced;
@@ -348,6 +373,7 @@ const step = () => {
 			printLine(result.key, result.value, superTotal);
 		}
 	}
+	const setsTotal = setsTotalNaked + setsTotalHidden;
 	if (setsTotal > 0) {
 		lines.push("--- Naked Hiddens");
 		const SetOrder = class {
@@ -385,23 +411,24 @@ const step = () => {
 		for (const order of ordered) {
 			printLine(order.key, order.value, setsTotal);
 		}
-		printLine("Naked 2", setNaked2, setsTotal);
-		printLine("Naked 3", setNaked3, setsTotal);
-		printLine("Naked 4", setNaked4, setsTotal);
-		printLine("Hidden 2", setHidden2, setsTotal);
-		printLine("Hidden 3", setHidden3, setsTotal);
-		printLine("Hidden 4", setHidden4, setsTotal);
 	}
 	if (candidateTotal > 0) {
 		lines.push("--- Candidates");
-		printLine("NakedHiddenSet", setsTotal, candidateTotal);
+		printLine("Naked2", setNaked2, candidateTotal);
+		printLine("Naked3", setNaked3, candidateTotal);
+		printLine("Naked4", setNaked4, candidateTotal);
+		printLine("Hidden2", setHidden2, candidateTotal);
+		printLine("Hidden3", setHidden3, candidateTotal);
+		printLine("Hidden4", setHidden4, candidateTotal);
+
 		printLine("Omissions", omissionsReduced, candidateTotal);
+		printLine("UniqueRectangle", uniqueRectangleReduced, candidateTotal);
+		printLine("HiddenSets", setsTotalHidden, candidateTotal);
 		printLine("yWing", yWingReduced, candidateTotal);
 		printLine("xyzWing", xyzWingReduced, candidateTotal);
 		printLine("xWing", xWingReduced, candidateTotal);
 		printLine("Swordfish", swordfishReduced, candidateTotal);
 		printLine("Jellyfish", jellyfishReduced, candidateTotal);
-		printLine("UniqueRectangle", uniqueRectangleReduced, candidateTotal);
 		if (mode === 2) printLine("Phistomefel", phistomefelCount, candidateTotal);
 	}
 
