@@ -137,9 +137,6 @@ const step = () => {
 
 	totalTime += elapsed;
 
-	let setsTotalNaked = 0;
-	let setsTotalHidden = 0;
-
 	if (result.bruteForceFill) {
 		data.bruteForce = 1;
 		bruteForceFill++;
@@ -314,21 +311,18 @@ const step = () => {
 		if (!result.bruteForceFill) candidates++;
 	}
 
-	setsTotalNaked += setNaked2;
-	setsTotalNaked += setNaked3;
-	setsTotalNaked += setNaked4;
-	setsTotalHidden += setHidden2;
-	setsTotalHidden += setHidden3;
-	setsTotalHidden += setHidden4;
-
 	const res = 10000;
 	const percent = (val, total = totalPuzzles) => {
 		return Math.ceil(100 * res * val / total) / res + "%";
 	}
 
 	let candidateTotal = 0;
-	candidateTotal += setsTotalNaked;
-	candidateTotal += setsTotalHidden;
+	candidateTotal += setNaked2;
+	candidateTotal += setNaked3;
+	candidateTotal += setNaked4;
+	candidateTotal += setHidden2;
+	candidateTotal += setHidden3;
+	candidateTotal += setHidden4;
 	candidateTotal += omissionsReduced;
 	candidateTotal += yWingReduced;
 	candidateTotal += xyzWingReduced;
@@ -373,7 +367,7 @@ const step = () => {
 			printLine(result.key, result.value, superTotal);
 		}
 	}
-	const setsTotal = setsTotalNaked + setsTotalHidden;
+	const setsTotal = setNaked4 + setNaked4 + setNaked4 + setHidden2 + setHidden3 + setHidden4;
 	if (setsTotal > 0) {
 		lines.push("--- Naked Hiddens");
 		const SetOrder = class {
@@ -423,7 +417,6 @@ const step = () => {
 
 		printLine("Omissions", omissionsReduced, candidateTotal);
 		printLine("UniqueRectangle", uniqueRectangleReduced, candidateTotal);
-		printLine("HiddenSets", setsTotalHidden, candidateTotal);
 		printLine("yWing", yWingReduced, candidateTotal);
 		printLine("xyzWing", xyzWingReduced, candidateTotal);
 		printLine("xWing", xWingReduced, candidateTotal);
