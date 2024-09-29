@@ -56,6 +56,16 @@
 		receiveDisplay.textContent = "Received: 0";
 		document.body.appendChild(receiveDisplay);
 
+		let worker = null;
+		const toggleWorker = () => {
+			if (worker) {
+				worker.terminate();
+				worker = null;
+				return;
+			}
+			worker = new Worker("worker.js", { type: "module" });
+		};
+
 		const sendDataStack = [];
 		let sendDataSending = false;
 		let sendDataSent = 0;
@@ -105,11 +115,22 @@
 			url += '&table=' + table;
 
 			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
-				sendDataSent++;
-				sentDisplay.textContent = "Sent: " + sendDataSent;
+				response.text().then(
+					(string) => {
+						sendDataSent++;
+						sentDisplay.textContent = "Sent: " + sendDataSent;
 
-				sendDataSending = false;
-				if (sendDataStack.length > 0) sendData();
+						sendDataSending = false;
+
+						const count = parseInt(string);
+						if (isNaN(count) || count >= 10000000) {
+							if (worker) toggleWorker();
+							return;
+						}
+
+						if (sendDataStack.length > 0) sendData();
+					}
+				);
 			});
 		};
 
@@ -188,7 +209,6 @@
 			});
 		};
 
-		let worker = null;
 		const processGenerate = (grids) => {
 			sentDisplay.style.visibility = 'visible';
 
@@ -263,14 +283,6 @@
 			sendRequest();
 		};
 
-		const toggleWorker = () => {
-			if (worker) {
-				worker.terminate();
-				worker = null;
-				return;
-			}
-			worker = new Worker("worker.js", { type: "module" });
-		};
 		generateButton.addEventListener('click', () => {
 			toggleWorker();
 			if (worker) processGenerate();
