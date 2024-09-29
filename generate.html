@@ -44,8 +44,17 @@
 		sentDisplay.style.right = '8px';
 		sentDisplay.style.fontFamily = 'Courier New';
 		sentDisplay.style.visibility = 'hidden';
-		sentDisplay.textContent = "0 Sent";
+		sentDisplay.textContent = "Sent: 0";
 		document.body.appendChild(sentDisplay);
+
+		const receiveDisplay = document.createElement('span');
+		receiveDisplay.style.position = 'absolute';
+		receiveDisplay.style.top = '104px';
+		receiveDisplay.style.right = '8px';
+		receiveDisplay.style.fontFamily = 'Courier New';
+		receiveDisplay.style.visibility = 'hidden';
+		receiveDisplay.textContent = "Received: 0";
+		document.body.appendChild(receiveDisplay);
 
 		const sendDataStack = [];
 		let sendDataSending = false;
@@ -97,7 +106,7 @@
 
 			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
 				sendDataSent++;
-				sentDisplay.textContent = sendDataSent + " Sent";
+				sentDisplay.textContent = "Sent: " + sendDataSent;
 
 				sendDataSending = false;
 				if (sendDataStack.length > 0) sendData();
@@ -167,7 +176,7 @@
 				updateDataSending = false;
 
 				updateDataSent += readyDataSend.length;
-				sentDisplay.textContent = updateDataSent + " Sent";
+				sentDisplay.textContent = "Sent: " + updateDataSent;
 
 				if (updateDataStack.length > 0) updateData();
 
@@ -202,9 +211,9 @@
 
 		const processUpdate = () => {
 			sentDisplay.style.visibility = 'visible';
+			receiveDisplay.style.visibility = 'visible';
 
 			const inc = 10000;
-			const end = 10000000;
 			let start = 0;
 
 			let sentCount = 0;
@@ -235,13 +244,16 @@
 						const json = JSON.parse(xhttp.responseText);
 						// fillContent(json.length, time);
 
-						start += inc;
-						if (start < end) sendRequest();
+						start += json.length;
+
+						receiveDisplay.textContent = "Received: " + start;
 
 						const workerData = {};
 						workerData.run = true;
 						workerData.grids = json;
 						worker.postMessage(workerData);
+
+						if (json.length === inc) sendRequest();
 					}
 				};
 				const url = `https://snovakow.dev/sudokulib/feedSudoku.php?start=${start}&end=${start + inc}&table=${table}`;
