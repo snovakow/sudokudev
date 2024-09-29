@@ -152,29 +152,6 @@ const step = () => {
 
 	if (simple) simples++;
 	else {
-		const processSet = (set2Property, set3Property, set4Property, data2Property, data3Property, data4Property, strategy) => {
-			if (result[set2Property] > 0 || result[set3Property] > 0 || result[set4Property] > 0) {
-				cells.fromData(save);
-				const strategyResult = fillSolve(cells, strategy, false);
-
-				result[set2Property] = strategyResult[set2Property];
-				result[set3Property] = strategyResult[set3Property];
-				result[set4Property] = strategyResult[set4Property];
-				if (strategyResult[set2Property] > 0 || strategyResult[set3Property] > 0 || strategyResult[set4Property] > 0) {
-					cells.fromData(save);
-					const resultIsolated = fillSolve(cells, strategy, true);
-
-					if (!resultIsolated.bruteForceFill) {
-						if (resultIsolated[set2Property] <= strategyResult[set2Property]) data[data2Property] = resultIsolated[set2Property];
-						if (resultIsolated[set3Property] <= strategyResult[set3Property]) data[data3Property] = resultIsolated[set3Property];
-						if (resultIsolated[set4Property] <= strategyResult[set4Property]) data[data4Property] = resultIsolated[set4Property];
-					}
-				}
-			}
-		}
-		processSet('naked2Reduced', 'naked3Reduced', 'naked4Reduced', 'has_naked2', 'has_naked3', 'has_naked4', STRATEGY.NAKED);
-		processSet('hidden2Reduced', 'hidden3Reduced', 'hidden4Reduced', 'has_hidden2', 'has_hidden3', 'has_hidden4', STRATEGY.HIDDEN);
-
 		const processStrategy = (resultProperty, dataProperty, strategy) => {
 			if (result[resultProperty] === 0) return;
 
@@ -193,9 +170,12 @@ const step = () => {
 				}
 			}
 		}
-		processStrategy('naked2Reduced', 'has_naked2', STRATEGY.NAKED);
-		processStrategy('naked3Reduced', 'has_naked2', STRATEGY.NAKED);
-		processStrategy('naked4Reduced', 'has_naked2', STRATEGY.NAKED);
+		processStrategy('naked2Reduced', 'has_naked2', STRATEGY.NAKED_2);
+		processStrategy('naked3Reduced', 'has_naked3', STRATEGY.NAKED_3);
+		processStrategy('naked4Reduced', 'has_naked4', STRATEGY.NAKED_4);
+		processStrategy('hidden2Reduced', 'has_hidden2', STRATEGY.HIDDEN_2);
+		processStrategy('hidden3Reduced', 'has_hidden3', STRATEGY.HIDDEN_3);
+		processStrategy('hidden4Reduced', 'has_hidden4', STRATEGY.HIDDEN_4);
 		processStrategy('omissionsReduced', 'has_omissions', STRATEGY.INTERSECTION_REMOVAL);
 		processStrategy('uniqueRectangleReduced', 'has_uniqueRectangle', STRATEGY.DEADLY_PATTERN);
 		processStrategy('yWingReduced', 'has_yWing', STRATEGY.Y_WING);
