@@ -123,7 +123,11 @@
 						sendDataSending = false;
 
 						const count = parseInt(string);
-						if (isNaN(count) || count >= 10000000) {
+
+						const nan = isNaN(count);
+						if (!nan) localStorage.setItem(table, count);
+
+						if (nan || count >= 10000000) {
 							if (worker) toggleWorker();
 							return;
 						}
