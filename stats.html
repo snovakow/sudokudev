@@ -41,7 +41,7 @@
 				container.innerHTML = xhttp.responseText + time;
 
 				processing = dirty;
-				if (processing) sendLoop();
+				if (processing) window.setTimeout(() => { sendLoop(); }, 1000);
 			};
 			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
 			xhttp.open("GET", url, true);
@@ -85,7 +85,7 @@
 				dirty = true;
 				if (!processing) {
 					processing = true;
-					sendLoop();
+					window.setTimeout(() => { sendLoop(); }, 1000);
 				}
 			});
 
