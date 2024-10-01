@@ -29,14 +29,19 @@
 			second: "numeric",
 		};
 
+		let processing = false;
+		let dirty = false;
 		const sendLoop = () => {
+			dirty = false;
+
 			const xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = () => {
 				if (xhttp.readyState != 4 || xhttp.status != 200) return;
 				const time = new Date().toLocaleString(undefined, options);
 				container.innerHTML = xhttp.responseText + time;
 
-				window.setTimeout(() => { sendLoop(); }, 1000 * 1);
+				processing = dirty;
+				if (processing) sendLoop();
 			};
 			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
 			xhttp.open("GET", url, true);
@@ -75,8 +80,19 @@
 			xhttp.send();
 		};
 
-		if (mode === "0") sendLoop();
-		else refresh();
+		if (mode === "0") {
+			window.addEventListener("storage", () => {
+				dirty = true;
+				if (!processing) {
+					processing = true;
+					sendLoop();
+				}
+			});
+
+			sendLoop();
+		} else {
+			refresh();
+		}
 
 	</script>
 </body>
