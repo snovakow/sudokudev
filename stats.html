@@ -19,6 +19,30 @@
 		const searchParams = new URLSearchParams(window.location.search);
 		const mode = searchParams.get("mode");
 
+		const options = {
+			weekday: "long",
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+			hour: "numeric",
+			minute: "numeric",
+			second: "numeric",
+		};
+
+		const sendLoop = () => {
+			const xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = () => {
+				if (xhttp.readyState != 4 || xhttp.status != 200) return;
+				const time = new Date().toLocaleString(undefined, options);
+				container.innerHTML = xhttp.responseText + time;
+
+				window.setTimeout(() => { sendLoop(); }, 1000 * 1);
+			};
+			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
+			xhttp.open("GET", url, true);
+			xhttp.send();
+		};
+
 		const refresh = () => {
 			const xhttp = new XMLHttpRequest();
 			const startTime = performance.now();
@@ -42,26 +66,18 @@
 			xhttp.onreadystatechange = () => {
 				if (xhttp.readyState == 3) fillContent(xhttp.responseText, '... ' + diffTime());
 				if (xhttp.readyState == 4 && xhttp.status == 200) {
-					const options = {
-						weekday: "long",
-						year: "numeric",
-						month: "long",
-						day: "numeric",
-						hour: "numeric",
-						minute: "numeric",
-						second: "numeric",
-					};
 					const time = diffTime() + " " + new Date().toLocaleString(undefined, options);
 					fillContent(xhttp.responseText, time);
-
-					if (mode === "0") window.setTimeout(() => { refresh(); }, 1000 * 1);
 				}
 			};
 			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
 			xhttp.open("GET", url, true);
 			xhttp.send();
 		};
-		refresh();
+
+		if (mode === "0") sendLoop();
+		else refresh();
+
 	</script>
 </body>
 
