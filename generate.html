@@ -7,6 +7,33 @@
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 
 	<script type="module">
+		let table = null;
+		let tablesProcessing = true;
+		let tablesIndex = 1;
+		const tablesFind = () => {
+			const xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = () => {
+				if (xhttp.readyState != 4 || xhttp.status != 200) return;
+				if (xhttp.responseText.length > 0) {
+					const responseNumber = parseInt(xhttp.responseText);
+					const nan = isNaN(responseNumber);
+					if (!nan) {
+						table = "puzzles" + tablesIndex;
+						if (responseNumber >= 10000000) {
+							tablesIndex++;
+							tablesFind();
+							return;
+						}
+					}
+				}
+				tablesProcessing = false;
+			};
+			const url = "https://snovakow.dev/sudokulib/feed.php?mode=0&table=puzzles" + tablesIndex;
+			xhttp.open("GET", url, true);
+			xhttp.send();
+		};
+		tablesFind();
+
 		const body = document.createElement('div');
 
 		body.style.fontFamily = "'Courier New', monospace";
@@ -18,13 +45,6 @@
 		generateButton.style.position = 'absolute';
 		generateButton.style.height = '32px';
 
-		const updateButton = document.createElement('button');
-		updateButton.appendChild(document.createTextNode("Update"));
-		updateButton.style.top = '48px';
-		updateButton.style.right = '8px';
-		updateButton.style.position = 'absolute';
-		updateButton.style.height = '32px';
-
 		const setMessage = (message) => {
 			while (body.firstChild) body.removeChild(body.lastChild);
 			for (const line of message) {
@@ -34,27 +54,14 @@
 			}
 		};
 
-		const searchParams = new URLSearchParams(window.location.search);
-
-		const table = searchParams.get("table");
-
 		const sentDisplay = document.createElement('span');
 		sentDisplay.style.position = 'absolute';
-		sentDisplay.style.top = '88px';
+		sentDisplay.style.top = '48px';
 		sentDisplay.style.right = '8px';
 		sentDisplay.style.fontFamily = 'Courier New';
 		sentDisplay.style.visibility = 'hidden';
 		sentDisplay.textContent = "Sent: 0";
 		document.body.appendChild(sentDisplay);
-
-		const receiveDisplay = document.createElement('span');
-		receiveDisplay.style.position = 'absolute';
-		receiveDisplay.style.top = '104px';
-		receiveDisplay.style.right = '8px';
-		receiveDisplay.style.fontFamily = 'Courier New';
-		receiveDisplay.style.visibility = 'hidden';
-		receiveDisplay.textContent = "Received: 0";
-		document.body.appendChild(receiveDisplay);
 
 		let worker = null;
 		const toggleWorker = () => {
@@ -70,7 +77,7 @@
 		let sendDataSending = false;
 		let sendDataSent = 0;
 		const sendData = (currentData) => {
-			if (!table) return;
+			if (tablesProcessing) return;
 			if (currentData) sendDataStack.push(currentData);
 			if (sendDataSending) return;
 
@@ -127,7 +134,18 @@
 						const nan = isNaN(count);
 						if (!nan) localStorage.setItem(table, count);
 
+						if (!nan) {
+							table = "puzzles" + tablesIndex;
+							if (responseNumber >= 10000000) {
+								tablesIndex++;
+								tablesFind();
+								return;
+							}
+						}
+
 						if (nan || count >= 10000000) {
+
+
 							if (worker) toggleWorker();
 							return;
 						}
@@ -138,90 +156,11 @@
 			});
 		};
 
-		const updateDataStack = [];
-		let updateDataSending = false;
-		let updateDataSent = 0;
-		const maxSend = 100;
-		const updateData = (data) => {
-			if (!table) return;
-
-			if (data) updateDataStack.push(data);
-			if (updateDataSending) return;
-			updateDataSending = true;
-
-			const url = 'https://snovakow.dev/sudokulib/update.php?version=1&table=' + table;
-
-			const readyDataSend = [];
-			let readyDataSent = 0;
-			for (const ready of updateDataStack) {
-				const post = {
-					version: 1,
-					id: ready.id,
-					simple: ready.simple,
-					naked2: ready.naked2,
-					naked3: ready.naked3,
-					naked4: ready.naked4,
-					hidden2: ready.hidden2,
-					hidden3: ready.hidden3,
-					hidden4: ready.hidden4,
-					omissions: ready.omissions,
-					yWing: ready.yWing,
-					xyzWing: ready.xyzWing,
-					xWing: ready.xWing,
-					swordfish: ready.swordfish,
-					jellyfish: ready.jellyfish,
-					uniqueRectangle: ready.uniqueRectangle,
-					phistomefel: ready.phistomefel,
-					superpositions: ready.superpositions,
-					bruteForce: ready.bruteForce,
-
-					has_naked2: ready.has_naked2,
-					has_naked3: ready.has_naked3,
-					has_naked4: ready.has_naked4,
-					has_hidden2: ready.has_hidden2,
-					has_hidden3: ready.has_hidden3,
-					has_hidden4: ready.has_hidden4,
-					has_omissions: ready.has_omissions,
-					has_uniqueRectangle: ready.has_uniqueRectangle,
-					has_yWing: ready.has_yWing,
-					has_xyzWing: ready.has_xyzWing,
-					has_xWing: ready.has_xWing,
-					has_swordfish: ready.has_swordfish,
-					has_jellyfish: ready.has_jellyfish,
-				};
-				readyDataSend.push(ready);
-				if (readyDataSend.length === maxSend) break;
-			}
-			updateDataStack.splice(0, readyDataSend.length);
-
-			fetch(url, {
-				method: "POST",
-				body: JSON.stringify(readyDataSend),
-			}).then(response => {
-				updateDataSending = false;
-
-				updateDataSent += readyDataSend.length;
-				sentDisplay.textContent = "Sent: " + updateDataSent;
-
-				if (updateDataStack.length > 0) updateData();
-
-				// response.text().then(
-				// 	(string)=>{
-				// 		console.log(string);
-				// 	}
-				// );
-			});
-		};
-
 		const processGenerate = (grids) => {
 			sentDisplay.style.visibility = 'visible';
 
 			const workerData = {};
 			workerData.run = true;
-			const grid = searchParams.get("grid");
-			if (grid && grid.length === 81) {
-				workerData.grid = grid;
-			}
 			workerData.grids = grids;
 
 			worker.onmessage = (e) => {
@@ -233,72 +172,13 @@
 			worker.postMessage(workerData);
 		};
 
-		const processUpdate = () => {
-			sentDisplay.style.visibility = 'visible';
-			receiveDisplay.style.visibility = 'visible';
-
-			const inc = 10000;
-			let start = 0;
-
-			let sentCount = 0;
-			const sentData = [];
-
-			worker.onmessage = (e) => {
-				const data = e.data;
-				if (data.message) setMessage(data.message);
-				updateData(data);
-			};
-
-			const sendRequest = () => {
-				const xhttp = new XMLHttpRequest();
-				xhttp.onreadystatechange = () => {
-					// if (xhttp.readyState == 3) fillContent(xhttp.responseText, '... ' + diffTime());
-					if (xhttp.readyState == 4 && xhttp.status == 200) {
-						if (!worker) return;
-
-						const options = {
-							weekday: "long",
-							year: "numeric",
-							month: "long",
-							day: "numeric",
-							hour: "numeric",
-							minute: "numeric",
-							second: "numeric",
-						};
-						const json = JSON.parse(xhttp.responseText);
-						// fillContent(json.length, time);
-
-						start += json.length;
-
-						receiveDisplay.textContent = "Received: " + start;
-
-						const workerData = {};
-						workerData.run = true;
-						workerData.grids = json;
-						worker.postMessage(workerData);
-
-						if (json.length === inc) sendRequest();
-					}
-				};
-				const url = `https://snovakow.dev/sudokulib/feedSudoku.php?start=${start}&end=${start + inc}&table=${table}`;
-				xhttp.open("GET", url, true);
-				xhttp.send();
-			}
-			sendRequest();
-		};
-
 		generateButton.addEventListener('click', () => {
+			if (tablesProcessing) return;
 			toggleWorker();
 			if (worker) processGenerate();
 		});
 
-		updateButton.addEventListener('click', () => {
-			toggleWorker();
-			if (worker) processUpdate();
-		});
-
 		document.body.appendChild(generateButton);
-		document.body.appendChild(updateButton);
 
 		document.body.appendChild(body);
 	</script>
