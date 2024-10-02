@@ -65,7 +65,57 @@
 			const tables = [];
 			const tableSizes = new Map();
 
+			let processStartTime = 0;
+			let processStartCount = 0;
+			let processCurrentCount = 0;
+			let processTimer = 0;
+
+			const estimateContainer = document.createElement('div');
+			estimateContainer.style.fontFamily = "'Courier New', monospace";
+			estimateContainer.style.position = "absolute";
+			estimateContainer.style.top = "8px";
+			estimateContainer.style.right = "8px";
+			document.body.appendChild(estimateContainer);
+
+			const createEstimate = () => {
+				let currentCount = 0;
+				for (const count of tableSizes.values()) {
+					currentCount += count;
+				}
+				const recordedCount = currentCount - processStartCount;
+				const recordedTime = performance.now() - processStartTime;
+
+				const remainingCount = 10000000 - processCurrentCount;
+				const ms = recordedTime / recordedCount * remainingCount;
+
+				const secondsTotal = Math.ceil(ms / 1000);
+				const minutesTotal = Math.floor(secondsTotal / 60);
+				const hoursTotal = Math.floor(minutesTotal / 60);
+				const daysTotal = Math.floor(hoursTotal / 24);
+
+				const seconds = secondsTotal % 60;
+				const minutes = minutesTotal % 60;
+				const hours = hoursTotal % 24;
+
+				const secondsString = seconds < 10 ? "0" + seconds : seconds;
+				const minutesString = minutes < 10 ? "0" + minutes : minutes;
+				const hoursString = hours < 10 ? "0" + hours : hours;
+
+				const estimate = `${daysTotal} days ${hoursString}:${minutesString}:${secondsString}`
+				while (estimateContainer.firstChild) estimateContainer.removeChild(estimateContainer.firstChild);
+				estimateContainer.appendChild(document.createTextNode(estimate));
+			};
+
 			const populate = () => {
+				if (processStartTime === 0) {
+					processStartTime = performance.now();
+					for (const count of tableSizes.values()) {
+						processStartCount += count;
+					}
+				} else {
+					if (!processTimer) processTimer = window.setInterval(createEstimate, 1000);
+				}
+
 				const content = [];
 				for (const table of tables) {
 					const count = tableSizes.get(table);
@@ -82,19 +132,10 @@
 					tables.push(table);
 				}
 				if (count === undefined || size > count) {
+					processCurrentCount = size;
 					tableSizes.set(table, size);
 				}
 			};
-
-			if (mode === "0") {
-				window.addEventListener("storage", (event) => {
-					const int = parseInt(event.newValue);
-					const nan = isNaN(int);
-					if (nan) return;
-					setTableSize(event.key, int);
-					populate();
-				});
-			}
 
 			let tablesIndex = 1;
 			const tablesFind = () => {
@@ -117,7 +158,16 @@
 							}
 						}
 					}
-					if (mode === "0") populate();
+					if (mode === "0") {
+						populate();
+						window.addEventListener("storage", (event) => {
+							const int = parseInt(event.newValue);
+							const nan = isNaN(int);
+							if (nan) return;
+							setTableSize(event.key, int);
+							populate();
+						});
+					}
 					if (mode === "2") refresh("?mode=2&table=" + tables.join(","));
 				};
 				const url = "https://snovakow.dev/sudokulib/feed.php?mode=0&table=puzzles" + tablesIndex;
