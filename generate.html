@@ -15,14 +15,21 @@
 			xhttp.onreadystatechange = () => {
 				if (xhttp.readyState != 4 || xhttp.status != 200) return;
 				if (xhttp.responseText.length > 0) {
-					const responseNumber = parseInt(xhttp.responseText);
-					const nan = isNaN(responseNumber);
-					if (!nan) {
-						table = "puzzles" + tablesIndex;
-						if (responseNumber >= 10000000) {
-							tablesIndex++;
-							tablesFind();
-							return;
+					const result = xhttp.responseText.split("=");
+					if (result.length === 2) {
+						const count = parseInt(result[1]);
+						const nan = isNaN(count);
+						if (!nan) {
+							table = "puzzles" + tablesIndex;
+
+							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+							generateButton.appendChild(document.createTextNode(table));
+
+							if (count >= 10000000) {
+								tablesIndex++;
+								tablesFind();
+								return;
+							}
 						}
 					}
 				}
@@ -39,7 +46,6 @@
 		body.style.fontFamily = "'Courier New', monospace";
 
 		const generateButton = document.createElement('button');
-		generateButton.appendChild(document.createTextNode("Generate"));
 		generateButton.style.top = '8px';
 		generateButton.style.right = '8px';
 		generateButton.style.position = 'absolute';
@@ -134,20 +140,17 @@
 						const nan = isNaN(count);
 						if (!nan) localStorage.setItem(table, count);
 
-						if (!nan) {
-							table = "puzzles" + tablesIndex;
-							if (responseNumber >= 10000000) {
-								tablesIndex++;
-								tablesFind();
-								return;
-							}
-						}
-
 						if (nan || count >= 10000000) {
+							if (nan) {
+								if (worker) toggleWorker();
+								return;
+							} else {
+								tablesIndex++;
+								table = "puzzles" + tablesIndex;
 
-
-							if (worker) toggleWorker();
-							return;
+								while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+								generateButton.appendChild(document.createTextNode(table));
+							}
 						}
 
 						if (sendDataStack.length > 0) sendData();
