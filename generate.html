@@ -130,29 +130,30 @@
 			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
 				response.text().then(
 					(string) => {
-						sendDataSent++;
-						sentDisplay.textContent = "Sent: " + sendDataSent;
-
-						sendDataSending = false;
-
 						const count = parseInt(string);
-
 						const nan = isNaN(count);
-						if (!nan) localStorage.setItem(table, count);
+						if (nan) {
+							if (worker) toggleWorker();
+							return;
+						}
+						if (count === 0 || count >= 10000000) {
+							tablesIndex++;
+							table = "puzzles" + tablesIndex;
 
-						if (nan || count >= 10000000) {
-							if (nan) {
-								if (worker) toggleWorker();
-								return;
-							} else {
-								tablesIndex++;
-								table = "puzzles" + tablesIndex;
-
-								while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
-								generateButton.appendChild(document.createTextNode(table));
-							}
+							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+							generateButton.appendChild(document.createTextNode(table));
 						}
 
+						if (count > 0) {
+							localStorage.setItem(table, count);
+
+							sendDataSent++;
+							sentDisplay.textContent = "Sent: " + sendDataSent;
+						} else {
+							sendDataStack.unshift(data);
+						}
+
+						sendDataSending = false;
 						if (sendDataStack.length > 0) sendData();
 					}
 				);
