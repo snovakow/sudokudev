@@ -29,26 +29,7 @@
 			second: "numeric",
 		};
 
-		let processing = false;
-		let dirty = false;
-		const sendLoop = () => {
-			dirty = false;
-
-			const xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = () => {
-				if (xhttp.readyState != 4 || xhttp.status != 200) return;
-				const time = new Date().toLocaleString(undefined, options);
-				container.innerHTML = xhttp.responseText + time;
-
-				processing = dirty;
-				if (processing) window.setTimeout(() => { sendLoop(); }, 1000);
-			};
-			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
-			xhttp.open("GET", url, true);
-			xhttp.send();
-		};
-
-		const refresh = () => {
+		const refresh = (search) => {
 			const xhttp = new XMLHttpRequest();
 			const startTime = performance.now();
 			const diffTime = (fixed = 1) => {
@@ -75,23 +56,77 @@
 					fillContent(xhttp.responseText, time);
 				}
 			};
-			const url = "https://snovakow.dev/sudokulib/feed.php" + window.location.search;
+			const url = "https://snovakow.dev/sudokulib/feed.php" + search;
 			xhttp.open("GET", url, true);
 			xhttp.send();
 		};
 
-		if (mode === "0") {
-			window.addEventListener("storage", () => {
-				dirty = true;
-				if (!processing) {
-					processing = true;
-					window.setTimeout(() => { sendLoop(); }, 1000);
-				}
-			});
+		if (mode === "0" || mode === "2") {
+			const tables = [];
+			const tableSizes = new Map();
 
-			sendLoop();
-		} else {
-			refresh();
+			const populate = () => {
+				const content = [];
+				for (const table of tables) {
+					const count = tableSizes.get(table);
+					content.push(table + ': ' + count.toLocaleString());
+				}
+				content.push('');
+				content.push(new Date().toLocaleString(undefined, options));
+
+				container.innerHTML = content.join('<br/>');
+			};
+			const setTableSize = (table, size) => {
+				const count = tableSizes.get(table);
+				if (count === undefined) {
+					tables.push(table);
+				}
+				if (count === undefined || size > count) {
+					tableSizes.set(table, size);
+				}
+			};
+
+			if (mode === "0") {
+				window.addEventListener("storage", (event) => {
+					const int = parseInt(event.newValue);
+					const nan = isNaN(int);
+					if (nan) return;
+					setTableSize(event.key, int);
+					populate();
+				});
+			}
+
+			let tablesIndex = 1;
+			const tablesFind = () => {
+				const xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = () => {
+					if (xhttp.readyState != 4 || xhttp.status != 200) return;
+					if (xhttp.responseText.length > 0) {
+						const result = xhttp.responseText.split("=");
+						if (result.length === 2) {
+							const count = parseInt(result[1]);
+							const nan = isNaN(count);
+							if (!nan) {
+								const name = result[0];
+								setTableSize(name, count);
+								if (count >= 10000000) {
+									tablesIndex++;
+									tablesFind();
+									return;
+								}
+							}
+						}
+					}
+					if (mode === "0") populate();
+					if (mode === "2") refresh("?mode=2&table=" + tables.join(","));
+				};
+				const url = "https://snovakow.dev/sudokulib/feed.php?mode=0&table=puzzles" + tablesIndex;
+				xhttp.open("GET", url, true);
+				xhttp.send();
+			};
+			tablesFind();
+		} else if (mode === "1") {
+			refresh(window.location.search);
 		}
 
 	</script>
