@@ -136,14 +136,6 @@
 							if (worker) toggleWorker();
 							return;
 						}
-						if (count === 0 || count >= 10000000) {
-							tablesIndex++;
-							table = "puzzles" + tablesIndex;
-
-							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
-							generateButton.appendChild(document.createTextNode(table));
-						}
-
 						if (count > 0) {
 							localStorage.setItem(table, count);
 
@@ -151,6 +143,13 @@
 							sentDisplay.textContent = "Sent: " + sendDataSent;
 						} else {
 							sendDataStack.unshift(data);
+						}
+						if (count === 0 || count >= 10000000) {
+							tablesIndex++;
+							table = "puzzles" + tablesIndex;
+
+							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+							generateButton.appendChild(document.createTextNode(table));
 						}
 
 						sendDataSending = false;
