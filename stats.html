@@ -81,6 +81,25 @@
 			document.body.appendChild(estimateContainer);
 
 			const createEstimate = () => {
+				const formatTime = (ms) => {
+					const secondsTotal = Math.ceil(ms / 1000);
+					const minutesTotal = Math.floor(secondsTotal / 60);
+					const hoursTotal = Math.floor(minutesTotal / 60);
+					const daysTotal = Math.floor(hoursTotal / 24);
+
+					const seconds = secondsTotal % 60;
+					const minutes = minutesTotal % 60;
+					const hours = hoursTotal % 24;
+
+					const secondsString = seconds < 10 ? "0" + seconds : seconds;
+					const minutesString = minutes < 10 ? "0" + minutes : minutes;
+					const hoursString = hours < 10 ? "0" + hours : hours;
+
+					return `${daysTotal} days ${hoursString}:${minutesString}:${secondsString}`
+				}
+
+				while (estimateContainer.firstChild) estimateContainer.removeChild(estimateContainer.firstChild);
+
 				let currentCount = 0;
 				for (const count of tableSizes.values()) {
 					currentCount += count;
@@ -91,21 +110,6 @@
 				const remainingCount = 10000000 - processCurrentCount;
 				const ms = recordedTime / recordedCount * remainingCount;
 
-				const secondsTotal = Math.ceil(ms / 1000);
-				const minutesTotal = Math.floor(secondsTotal / 60);
-				const hoursTotal = Math.floor(minutesTotal / 60);
-				const daysTotal = Math.floor(hoursTotal / 24);
-
-				const seconds = secondsTotal % 60;
-				const minutes = minutesTotal % 60;
-				const hours = hoursTotal % 24;
-
-				const secondsString = seconds < 10 ? "0" + seconds : seconds;
-				const minutesString = minutes < 10 ? "0" + minutes : minutes;
-				const hoursString = hours < 10 ? "0" + hours : hours;
-
-				while (estimateContainer.firstChild) estimateContainer.removeChild(estimateContainer.firstChild);
-
 				estimateContainer.appendChild(document.createTextNode("ETA"));
 				estimateContainer.appendChild(document.createElement('br'));
 
@@ -113,8 +117,14 @@
 				estimateContainer.appendChild(document.createTextNode(date));
 				estimateContainer.appendChild(document.createElement('br'));
 
-				const estimate = `${daysTotal} days ${hoursString}:${minutesString}:${secondsString}`
+				const estimate = formatTime(ms);
 				estimateContainer.appendChild(document.createTextNode(estimate));
+				estimateContainer.appendChild(document.createElement('br'));
+
+				const ms7 = recordedTime * 1e7 / recordedCount;
+				const estimate7 = formatTime(ms7);
+				estimateContainer.appendChild(document.createTextNode("10⁷: " + estimate7));
+				estimateContainer.appendChild(document.createElement('br'));
 			};
 
 			const populate = () => {
