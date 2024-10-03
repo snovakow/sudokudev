@@ -5,8 +5,8 @@ import { picker, pickerDraw, pickerMarker, pixAlign } from "../sudokulib/picker.
 import { candidates, nakedSingles, hiddenSingles } from "../sudokulib/solver.js";
 
 const raws = [
-	"v=bnPmmAeb-SI",
-	'090004085010080900002390040000009008500030096900800000040008200003040010600703050'.split(''),
+	"Snake",
+	'607901300903070000050030000000120680002589000500000000300007906000060400700300800'.split(''),
 ];
 const sudokuSamples = [];
 for (let rawIndex = 0; rawIndex < raws.length; rawIndex += 2) {
