@@ -74,7 +74,7 @@
 
 			const estimateContainer = document.createElement('div');
 			estimateContainer.style.fontFamily = "'Courier New', monospace";
-			estimateContainer.style.textAlign = "left";
+			estimateContainer.style.textAlign = "right";
 			estimateContainer.style.position = "absolute";
 			estimateContainer.style.top = "8px";
 			estimateContainer.style.right = "8px";
@@ -110,20 +110,14 @@
 				const remainingCount = 10000000 - processCurrentCount;
 				const ms = recordedTime / recordedCount * remainingCount;
 
-				estimateContainer.appendChild(document.createTextNode("ETA"));
-				estimateContainer.appendChild(document.createElement('br'));
-
 				const date = new Date(Date.now() + ms).toLocaleString(undefined, options);
-				estimateContainer.appendChild(document.createTextNode(date));
+				estimateContainer.appendChild(document.createTextNode("ETA: " + date));
 				estimateContainer.appendChild(document.createElement('br'));
 
 				const estimate = formatTime(ms);
-				estimateContainer.appendChild(document.createTextNode(estimate));
-				estimateContainer.appendChild(document.createElement('br'));
-
 				const ms7 = recordedTime * 1e7 / recordedCount;
 				const estimate7 = formatTime(ms7);
-				estimateContainer.appendChild(document.createTextNode("10⁷: " + estimate7));
+				estimateContainer.appendChild(document.createTextNode(estimate + " / " + estimate7));
 				estimateContainer.appendChild(document.createElement('br'));
 			};
 
