@@ -132,10 +132,14 @@
 				}
 
 				const content = [];
+				let total = 0;
 				for (const table of tables) {
 					const count = tableSizes.get(table);
+					total += count;
 					content.push(table + ': ' + count.toLocaleString());
 				}
+				if (tables.length > 1) content.push("Total Puzzles: " + total.toLocaleString());
+
 				content.push('');
 				content.push(new Date().toLocaleString(undefined, options));
 
