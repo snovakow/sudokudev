@@ -19,21 +19,21 @@
 					if (result.length === 2) {
 						const count = parseInt(result[1]);
 						const nan = isNaN(count);
-						if (!nan) {
-							table = "puzzles" + tablesIndex;
-
-							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
-							generateButton.appendChild(document.createTextNode(table));
-
-							if (count >= 10000000) {
+						if (!nan && count >= 0) {
+							if (count >= 1e7) {
 								tablesIndex++;
 								tablesFind();
-								return;
+							} else {
+								table = "puzzles" + tablesIndex;
+
+								while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+								generateButton.appendChild(document.createTextNode(table));
+
+								tablesProcessing = false;
 							}
 						}
 					}
 				}
-				tablesProcessing = false;
 			};
 			const url = "https://snovakow.dev/sudokulib/feed.php?mode=0&table=puzzles" + tablesIndex;
 			xhttp.open("GET", url, true);
@@ -127,35 +127,33 @@
 
 			url += '&table=' + table;
 
-			fetch(url, { method: "GET" /* default, so we can ignore */ }).then(response => {
-				response.text().then(
-					(string) => {
-						const count = parseInt(string);
-						const nan = isNaN(count);
-						if (nan) {
-							if (worker) toggleWorker();
-							return;
-						}
-						if (count > 0) {
-							localStorage.setItem(table, count);
-
-							sendDataSent++;
-							sentDisplay.textContent = "Sent: " + sendDataSent;
-						} else {
-							sendDataStack.unshift(data);
-						}
-						if (count === 0 || count >= 10000000) {
-							tablesIndex++;
-							table = "puzzles" + tablesIndex;
-
-							while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
-							generateButton.appendChild(document.createTextNode(table));
-						}
-
-						sendDataSending = false;
-						if (sendDataStack.length > 0) sendData();
+			fetch(url).then(response => {
+				response.text().then((string) => {
+					const count = parseInt(string);
+					const nan = isNaN(count);
+					if (nan || count < 0) {
+						if (worker) toggleWorker();
+						return;
 					}
-				);
+					if (count > 0) {
+						localStorage.setItem(table, count);
+
+						sendDataSent++;
+						sentDisplay.textContent = "Sent: " + sendDataSent;
+					} else {
+						sendDataStack.unshift(data);
+					}
+					if (count === 0 || count >= 1e7) {
+						tablesIndex++;
+						table = "puzzles" + tablesIndex;
+
+						while (generateButton.firstChild) generateButton.removeChild(generateButton.firstChild);
+						generateButton.appendChild(document.createTextNode(table));
+					}
+
+					sendDataSending = false;
+					if (sendDataStack.length > 0) sendData();
+				});
 			});
 		};
 
