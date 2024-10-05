@@ -114,7 +114,6 @@
 				const recordedTime = Date.now() - processStartTime;
 
 				const remainingCount = 1e7 - processCurrentCount;
-				const ms = recordedTime / recordedCount * remainingCount;
 
 				const addLine = (line, title) => {
 					if (title) {
@@ -136,11 +135,14 @@
 				addLine(formatTime(recordedTime) + " elapsed");
 				estimateContainer.appendChild(document.createElement('br'));
 
-				const date = new Date(Date.now() + ms).toLocaleString(undefined, options);
-				addLine(date, "10M ETA");
-				addLine(formatTime(ms) + " remaining");
-				const ms7 = recordedTime * 1e7 / recordedCount;
-				addLine(formatTime(ms7) + " total");
+				if (recordedCount > 0) {
+					const ms = recordedTime / recordedCount * remainingCount;
+					const date = new Date(Date.now() + ms).toLocaleString(undefined, options);
+					addLine(date, "10M ETA");
+					addLine(formatTime(ms) + " remaining");
+					const ms7 = recordedTime * 1e7 / recordedCount;
+					addLine(formatTime(ms7) + " total");
+				}
 			};
 
 			const populate = () => {
