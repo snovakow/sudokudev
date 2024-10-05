@@ -81,6 +81,12 @@
 			document.body.appendChild(estimateContainer);
 
 			const createEstimate = () => {
+				window.requestAnimationFrame(createEstimate);
+
+				const now = Math.floor(Date.now() / 1000);
+				if (now === processTimer) return;
+				processTimer = now;
+
 				const formatTime = (ms) => {
 					const secondsTotal = Math.ceil(ms / 1000);
 					const minutesTotal = Math.floor(secondsTotal / 60);
@@ -105,30 +111,48 @@
 					currentCount += count;
 				}
 				const recordedCount = currentCount - processStartCount;
-				const recordedTime = performance.now() - processStartTime;
+				const recordedTime = Date.now() - processStartTime;
 
-				const remainingCount = 10000000 - processCurrentCount;
+				const remainingCount = 1e7 - processCurrentCount;
 				const ms = recordedTime / recordedCount * remainingCount;
 
-				const date = new Date(Date.now() + ms).toLocaleString(undefined, options);
-				estimateContainer.appendChild(document.createTextNode("ETA: " + date));
+				const addLine = (line, title) => {
+					if (title) {
+						const bolded = document.createElement('span');
+						bolded.style.fontWeight = "bold";
+						bolded.appendChild(document.createTextNode(title + ": "));
+						estimateContainer.appendChild(bolded);
+					}
+					estimateContainer.appendChild(document.createTextNode(line));
+					estimateContainer.appendChild(document.createElement('br'));
+				};
+
+				const dateNow = new Date().toLocaleString(undefined, options);
+				addLine(dateNow, "Time");
 				estimateContainer.appendChild(document.createElement('br'));
 
-				const estimate = formatTime(ms);
-				const ms7 = recordedTime * 1e7 / recordedCount;
-				const estimate7 = formatTime(ms7);
-				estimateContainer.appendChild(document.createTextNode(estimate + " / " + estimate7));
+				const dateStart = new Date(processStartTime).toLocaleString(undefined, options);
+				addLine(dateStart, "Start");
+				addLine(formatTime(recordedTime) + " elapsed");
 				estimateContainer.appendChild(document.createElement('br'));
+
+				const date = new Date(Date.now() + ms).toLocaleString(undefined, options);
+				addLine(date, "10M ETA");
+				addLine(formatTime(ms) + " remaining");
+				const ms7 = recordedTime * 1e7 / recordedCount;
+				addLine(formatTime(ms7) + " total");
 			};
 
 			const populate = () => {
 				if (processStartTime === 0) {
-					processStartTime = performance.now();
+					processStartTime = Date.now();
 					for (const count of tableSizes.values()) {
 						processStartCount += count;
 					}
 				} else {
-					if (!processTimer) processTimer = window.setInterval(createEstimate, 1000);
+					if (processTimer === 0) {
+						window.requestAnimationFrame(createEstimate);
+					}
 				}
 
 				const content = [];
@@ -166,10 +190,10 @@
 						if (result.length === 2) {
 							const count = parseInt(result[1]);
 							const nan = isNaN(count);
-							if (!nan) {
+							if (!nan && count >= 0) {
 								const name = result[0];
 								setTableSize(name, count);
-								if (count >= 10000000) {
+								if (count >= 1e7) {
 									tablesIndex++;
 									tablesFind();
 									return;
