@@ -2,7 +2,7 @@ import { CellCandidate, Grid } from "../sudokulib/Grid.js";
 import { sudokuGenerator, fillSolve, totalPuzzles, STRATEGY, STRATEGIES } from "../sudokulib/generator.js";
 
 const cells = new Grid();
-for (const index of Grid.indices) cells[index] = new CellCandidate(index);
+for (let i = 0; i < 81; i++) cells[i] = new CellCandidate(i);
 
 let simples = 0;
 
