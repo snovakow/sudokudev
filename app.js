@@ -377,7 +377,7 @@ const superimposeCandidates = (reset = false) => {
 	let flips;
 	if (superpositionMode === 0) {
 		const union = new Grid();
-		for (const index of Grid.indices) union[index] = new CellCandidate(index);
+		for (let i = 0; i < 81; i++) union[i] = new CellCandidate(i);
 		for (let index = 0; index < 81; index++) {
 			const startCell = startBoard[index];
 			const unionCell = union[index];
@@ -426,7 +426,7 @@ const superimposeCandidates = (reset = false) => {
 		flips = [startBoard, union.toData()];
 	} else if (superpositionMode === 1) {
 		const intersection = new Grid();
-		for (const index of Grid.indices) intersection[index] = new CellCandidate(index);
+		for (let i = 0; i < 81; i++) intersection[i] = new CellCandidate(i);
 		for (let index = 0; index < 81; index++) {
 			const startCell = startBoard[index];
 			const intersectionCell = intersection[index];
@@ -442,7 +442,7 @@ const superimposeCandidates = (reset = false) => {
 			if (cell.symbol !== 0) continue;
 
 			const union = new Grid();
-			for (const index of Grid.indices) union[index] = new CellCandidate(index);
+			for (let i = 0; i < 81; i++) union[i] = new CellCandidate(i);
 			for (let index = 0; index < 81; index++) {
 				const startCell = startBoard[index];
 				const unionCell = union[index];
@@ -500,7 +500,7 @@ const superimposeCandidates = (reset = false) => {
 		flips = [startBoard, intersection.toData()];
 	} else if (superpositionMode === 2) {
 		const intersection = new Grid();
-		for (const index of Grid.indices) intersection[index] = new CellCandidate(index);
+		for (let i = 0; i < 81; i++) intersection[i] = new CellCandidate(i);
 		for (let index = 0; index < 81; index++) {
 			const startCell = startBoard[index];
 			const intersectionCell = intersection[index];
@@ -514,7 +514,7 @@ const superimposeCandidates = (reset = false) => {
 		for (const group of Grid.groupTypes) {
 			for (let x = 1; x <= 9; x++) {
 				const union = new Grid();
-				for (const index of Grid.indices) union[index] = new CellCandidate(index);
+				for (let i = 0; i < 81; i++) union[i] = new CellCandidate(i);
 				for (let index = 0; index < 81; index++) {
 					const startCell = startBoard[index];
 					const unionCell = union[index];
