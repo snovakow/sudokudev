@@ -74,6 +74,7 @@ const step = () => {
 	};
 
 	const save = cells.toData();
+	for (const cell of cells) if (cell.symbol === 0) cell.fill();
 	const result = fillSolve(cells, STRATEGY.ALL);
 
 	data.puzzleClues = data.puzzle;
