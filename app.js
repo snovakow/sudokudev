@@ -35,8 +35,6 @@ const puzzleData = {
 }
 Object.seal(puzzleData);
 
-let selectPuzzleIndex = 0;
-
 const titleHeight = 28;
 
 const saveData = () => {
@@ -127,7 +125,6 @@ const pickerClick = (event) => {
 	const symbol = board.cells[selectedIndex].symbol;
 	if (symbol === index) {
 		const cell = board.cells[selectedIndex];
-		cell.show = false;
 		cell.setSymbol(0);
 	} else {
 		board.cells[selectedIndex].setSymbol(index);
@@ -157,13 +154,12 @@ const pickerMarkerClick = (event) => {
 	const symbol = r * 3 + c + 1;
 	const selectedIndex = selectedRow * 9 + selectedCol;
 	const cell = board.cells[selectedIndex];
-	if (cell.show) {
+	if (cell.symbol === 0) {
 		const had = cell.delete(symbol);
 		if (!had) cell.add(symbol);
 	} else {
 		cell.clear();
 		cell.add(symbol);
-		cell.show = true;
 	}
 
 	saveData();
@@ -218,58 +214,30 @@ const createSelect = (options, onChange) => {
 	return select;
 };
 
-const loadSudoku = () => {
-	const xhttp = new XMLHttpRequest();
-	xhttp.onreadystatechange = () => {
-		if (xhttp.readyState == 4 && xhttp.status == 200) {
-			const fields = xhttp.responseText.split(":");
-			if (fields.length !== 3) return;
-
-			const puzzleId = parseInt(fields[0]);
-			const puzzle = fields[1];
-			if (puzzle.length !== 81) return;
-			const grid = fields[2];
-			if (grid.length !== 81) return;
-
-			const transform = generateTransform();
-			const puzzleTransformed = generateFromSeed(puzzle, transform);
-			const gridTransformed = generateFromSeed(grid, transform);
-
-			const puzzleString = puzzleTransformed.join("");
-			board.cells.fromString(puzzleString);
-			for (const cell of board.cells) {
-				cell.show = false;
-				const startCell = board.startCells[cell.index];
-				startCell.symbol = cell.symbol;
-			}
-
-			puzzleData.id = puzzleId;
-			puzzleData.transform = transform;
-			puzzleData.grid = gridTransformed;
-
-			saveData();
-			draw();
-		}
-	};
-	const uid = performance.now().toString() + Math.random().toString();
-	const search = window.location.search ? window.location.search : "?table=puzzles1&strategy=hidden4&uid=" + uid;
-	xhttp.open("GET", "../sudokulib/sudoku.php" + search, true);
-	xhttp.send();
-};
-
 const names = [];
 for (const sudoku of sudokuSamples) names.push(sudoku[9]);
 
 const selector = createSelect(["-", ...names], (select) => {
 	if (select.selectedIndex === 0) {
-		loadSudoku();
+		selected = false;
+		board.resetGrid();
+		saveData();
+		draw();
 		return;
 	}
 
 	selected = false;
 
 	const index = select.selectedIndex - 1;
-	board.setGrid(index < sudokuSamples.length ? sudokuSamples[index] : sudokuSamples[index - sudokuSamples.length]);
+	const sample = index < sudokuSamples.length ? sudokuSamples[index] : sudokuSamples[index - sudokuSamples.length];
+	const stringCells = [];
+	for (let y = 0; y < 9; y++) {
+		const row = sample[y];
+		for (let x = 0; x < 9; x++) {
+			stringCells.push(row[x]);
+		}
+	}
+	board.setGrid(stringCells);
 
 	const grid = new Uint8Array(81);
 	for (let i = 0; i < 81; i++)grid[i] = board.cells[i].symbol;
@@ -285,7 +253,6 @@ selector.style.top = titleHeight / 2 + 'px';
 selector.style.left = '8px';
 selector.style.transform = 'translateY(-50%)';
 
-let loaded = false;
 if (window.name) {
 	const metadata = loadGrid();
 	if (metadata) {
@@ -302,13 +269,8 @@ if (window.name) {
 		} else {
 			selector.selectedIndex = metadata.id;
 		}
-
-		loaded = true;
 	}
 	draw();
-}
-if (!loaded) {
-	loadSudoku();
 }
 
 const clearButton = document.createElement('button');
@@ -331,10 +293,6 @@ candidateButton.style.width = '32px';
 candidateButton.style.height = '32px';
 
 candidateButton.addEventListener('click', () => {
-	for (const cell of board.cells) {
-		cell.show = true;
-	}
-
 	const now = performance.now();
 
 	const result = fillSolve(board.cells);
@@ -355,10 +313,6 @@ const superimposeCandidates = (reset = false) => {
 		if (!reset) return;
 	}
 	if (!selected && superpositionMode === 0) return;
-
-	for (const cell of board.cells) {
-		cell.show = true;
-	}
 
 	const solve = (cells) => {
 		let progress = false;
